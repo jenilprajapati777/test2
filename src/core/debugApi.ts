@@ -38,14 +38,20 @@ export function registerDebugApi(ctx: DebugApiContext): void {
         y: Number(ctx.player.planY.toFixed(3)),
         yawDeg: Number((((ctx.player.yawRad * 180) / Math.PI) % 360).toFixed(1)),
         speed: Number(ctx.player.speed.toFixed(3)),
-        character: ctx.player.getModel().id
+        character: ctx.player.getModel().id,
+        isMeshAttached: ctx.player.getModel().group.parent !== null,
+        isMeshVisible: ctx.player.getModel().group.visible,
+        meshOpacity: ctx.player.getModel().materials[0]?.opacity ?? 1
       };
     },
 
     getCompanion() {
       return {
         x: Number(ctx.companion.planX.toFixed(3)),
-        y: Number(ctx.companion.planY.toFixed(3))
+        y: Number(ctx.companion.planY.toFixed(3)),
+        character: ctx.companion.getModel().id,
+        isMeshAttached: ctx.companion.getModel().group.parent !== null,
+        isMeshVisible: ctx.companion.getModel().group.visible
       };
     },
 
@@ -71,6 +77,15 @@ export function registerDebugApi(ctx: DebugApiContext): void {
         ctx.camera.snapTo(x, y, (yawDeg * Math.PI) / 180);
       } else {
         ctx.camera.snapTo(x, y);
+      }
+    },
+
+    setCameraOrbit(yawRad: number, pitchRad: number, dist?: number) {
+      ctx.camera.yaw = yawRad;
+      ctx.camera.pitch = pitchRad;
+      if (dist !== undefined) {
+        ctx.camera.targetDistance = dist;
+        ctx.camera.currentDistance = dist;
       }
     },
 

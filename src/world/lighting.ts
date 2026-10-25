@@ -55,12 +55,12 @@ export class LightingRig {
     point2.position.set(13, 3.2, 3); // Right alcove
     this.group.add(point2);
 
-    const point3 = new THREE.PointLight(0xffe2c4, 0.7, 12, 1.2);
-    point3.position.set(0, 3.2, 12); // Decision alcove
+    const point3 = new THREE.PointLight(0xffe2c4, 0.8, 14, 1.2);
+    point3.position.set(0, 3.2, -12); // Decision alcove (plan y = 12 -> Three.js z = -12)
     this.group.add(point3);
 
-    const point4 = new THREE.PointLight(0xffe6cb, 0.6, 10, 1.2);
-    point4.position.set(0, 3.2, -10); // Entry foyer
+    const point4 = new THREE.PointLight(0xffe6cb, 0.85, 14, 1.2);
+    point4.position.set(0, 3.2, 10); // Entry foyer (plan y = -10 -> Three.js z = +10)
     this.group.add(point4);
 
     // 5. Skylight shaft mesh (additive cylinder/cone)

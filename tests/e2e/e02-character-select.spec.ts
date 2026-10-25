@@ -22,6 +22,16 @@ test.describe('E-02: Character Selection', () => {
 
     const player = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
     expect(player.character).toBe('rutu');
+    expect(player.isMeshAttached).toBe(true);
+    expect(player.isMeshVisible).toBe(true);
+
+    // Position in foyer and orbit camera to face character directly from front
+    await page.evaluate(() => {
+      (window as any).__MUSEUM__.teleport(0, -9.0, 0);
+      (window as any).__MUSEUM__.setCameraOrbit(Math.PI, 0.06, 2.5);
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'docs/verification/character-rutu-front.png' });
 
     expect(guards.errors).toEqual([]);
   });
@@ -37,6 +47,16 @@ test.describe('E-02: Character Selection', () => {
 
     const player = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
     expect(player.character).toBe('jenil');
+    expect(player.isMeshAttached).toBe(true);
+    expect(player.isMeshVisible).toBe(true);
+
+    // Position in foyer and orbit camera to face character directly from front
+    await page.evaluate(() => {
+      (window as any).__MUSEUM__.teleport(0, -9.0, 0);
+      (window as any).__MUSEUM__.setCameraOrbit(Math.PI, 0.06, 2.5);
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'docs/verification/character-jenil-front.png' });
 
     expect(guards.errors).toEqual([]);
   });

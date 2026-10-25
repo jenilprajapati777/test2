@@ -43,6 +43,8 @@ export class Companion {
       this.yawRad = (yawDeg * Math.PI) / 180;
     }
     this.speed = 0;
+    this.model.setOpacity(1.0);
+    this.model.group.visible = true;
     this.syncMeshPosition();
   }
 
@@ -116,6 +118,6 @@ export class Companion {
 
   private syncMeshPosition(): void {
     this.model.group.position.set(this.planX, 0, -this.planY);
-    this.model.group.rotation.y = this.yawRad + Math.PI;
+    this.model.group.rotation.set(0, this.yawRad + Math.PI, 0);
   }
 }

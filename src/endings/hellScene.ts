@@ -478,8 +478,16 @@ export class HellScene {
     this.isActiveFlag = false;
     this.uiOverlay.style.display = 'none';
 
-    // Remove character from hell scene so it's not destroyed
+    // Remove falling character from hell scene and dispose its resources
     this.scene.remove(this.characterModel.group);
+    this.characterModel.group.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        (obj as THREE.Mesh).geometry?.dispose();
+      }
+    });
+    for (const mat of this.characterModel.materials) {
+      mat.dispose();
+    }
 
     // Dispose geometries and materials
     this.cylinderMesh.geometry.dispose();

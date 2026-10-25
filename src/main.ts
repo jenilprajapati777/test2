@@ -160,6 +160,21 @@ class MuseumApp {
       },
       onRestoreMuseum: () => {
         this.activeHellScene = null;
+        // Defensive check: ensure both player and companion models are parented to scene and fully visible
+        const pModel = this.player.getModel();
+        const cModel = this.companion.getModel();
+        if (!this.scene.children.includes(pModel.group)) {
+          this.scene.add(pModel.group);
+        }
+        if (!this.scene.children.includes(cModel.group)) {
+          this.scene.add(cModel.group);
+        }
+        pModel.setOpacity(1.0);
+        cModel.setOpacity(1.0);
+        pModel.group.visible = true;
+        cModel.group.visible = true;
+        pModel.group.rotation.set(0, (PLAYER_SPAWN.yawDeg * Math.PI) / 180 + Math.PI, 0);
+        cModel.group.rotation.set(0, (PLAYER_SPAWN.yawDeg * Math.PI) / 180 + Math.PI, 0);
       }
     });
 

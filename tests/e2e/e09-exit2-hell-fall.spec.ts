@@ -78,4 +78,54 @@ test.describe('E-09: Exit 2 Hell Fall, Timings, Retry Loops & Memory Stability',
 
     expect(guards.errors).toEqual([]);
   });
+
+  test('Rutu character selecting No (Exit 2) and respawning preserves character mesh visibility and attachment in scene', async ({ page }) => {
+    const guards = setupPageGuards(page);
+
+    await page.goto('/?test=1');
+    await waitForMuseumReady(page);
+
+    // Select Rutu on the character selection screen
+    await page.locator('#btn-select-rutu').click();
+    await page.waitForFunction(() => (window as any).__MUSEUM__.getState() === 'EXPLORING', { timeout: 15000 });
+
+    const beforeFall = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
+    expect(beforeFall.character).toBe('rutu');
+    expect(beforeFall.isMeshAttached).toBe(true);
+    expect(beforeFall.isMeshVisible).toBe(true);
+
+    // Enter Exit 2 trigger zone: [8.4, 9] x [11, 14]
+    await page.evaluate(() => (window as any).__MUSEUM__.teleport(8.6, 12.5, 90));
+    await page.waitForFunction(() => (window as any).__MUSEUM__.getState() === 'HELL_FALL', { timeout: 15000 });
+
+    const retryPanel = page.locator('#hell-retry-panel');
+    await expect(retryPanel).toBeVisible({ timeout: 25000 });
+
+    // Click Yes to retry
+    await page.locator('#btn-hell-yes').click();
+
+    // Verify successfully restored to EXPLORING
+    await page.waitForFunction(() => (window as any).__MUSEUM__.getState() === 'EXPLORING', { timeout: 15000 });
+
+    const afterRespawn = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
+    expect(afterRespawn.character).toBe('rutu');
+    expect(afterRespawn.isMeshAttached).toBe(true);
+    expect(afterRespawn.isMeshVisible).toBe(true);
+    expect(afterRespawn.meshOpacity).toBeGreaterThanOrEqual(0.35);
+
+    // When walking forward into the open foyer, camera distance increases and opacity is full 1.0
+    await page.evaluate(() => (window as any).__MUSEUM__.teleport(-0.8, -10.0, 0));
+    await page.waitForTimeout(300);
+    const inFoyer = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
+    expect(inFoyer.meshOpacity).toBe(1.0);
+    expect(afterRespawn.x).toBeCloseTo(-0.8, 1);
+    expect(afterRespawn.y).toBeCloseTo(-12, 1);
+
+    const companion = await page.evaluate(() => (window as any).__MUSEUM__.getCompanion());
+    expect(companion.character).toBe('jenil');
+    expect(companion.isMeshAttached).toBe(true);
+    expect(companion.isMeshVisible).toBe(true);
+
+    expect(guards.errors).toEqual([]);
+  });
 });

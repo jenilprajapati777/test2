@@ -2,6 +2,7 @@ import { EXIT_1_TRIGGER, EXIT_2_TRIGGER, PLAYER_SPAWN, COMPANION_SPAWN } from '.
 import { GameStateMachine } from '../core/stateMachine.js';
 import { PlayerController } from '../characters/playerController.js';
 import { Companion } from '../characters/companion.js';
+import { CharacterFactory } from '../characters/characterFactory.js';
 import { RaycastCamera } from '../physics/raycastCamera.js';
 import { ContentSchema } from '../config/content.js';
 import { RightPathEnding } from './rightPath.js';
@@ -89,8 +90,9 @@ export class EndingController {
 
     // Fade to black (0.8s)
     this.fadeToBlack(800, () => {
-      // Switch to HellScene
-      const hell = new HellScene(this.options.player.getModel(), this.options.content, {
+      // Create dedicated falling character model for HellScene to isolate from museum player
+      const fallingModel = CharacterFactory.createProcedural(this.options.player.getModel().id);
+      const hell = new HellScene(fallingModel, this.options.content, {
         onYesRetry: () => this.handleRespawn(),
         onNoFarewell: () => {
           if (this.options.stateMachine.getState() === 'WRONG_PATH_PROMPT') {

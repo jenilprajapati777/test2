@@ -63,6 +63,8 @@ export class PlayerController {
     this.speed = 0;
     this.vx = 0;
     this.vy = 0;
+    this.model.setOpacity(1.0);
+    this.model.group.visible = true;
     this.syncMeshPosition();
   }
 
@@ -177,8 +179,7 @@ export class PlayerController {
   private syncMeshPosition(): void {
     // Plan (x, y) -> Three.js (x, 0, -y)
     this.model.group.position.set(this.planX, 0, -this.planY);
-    // In Three.js, rotation.y rotates around vertical axis
-    // When yaw is 0 (facing north, -z), rotation.y should face -z (Three.js Math.PI)
-    this.model.group.rotation.y = this.yawRad + Math.PI;
+    // In Three.js, rotation.y rotates around vertical axis; guarantee upright orientation
+    this.model.group.rotation.set(0, this.yawRad + Math.PI, 0);
   }
 }
