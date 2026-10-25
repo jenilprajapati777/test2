@@ -1,0 +1,29 @@
+{
+  "name": "jenil-rutu-museum",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "placeholders": "node scripts/make-placeholders.mjs",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:all": "npm run typecheck && npm run test:unit && npm run build && npm run test:e2e",
+    "test:live": "playwright test tests/e2e/e13-live-smoke.spec.ts",
+    "deploy": "node scripts/deploy.mjs"
+  },
+  "dependencies": {
+    "three": "0.174.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.5",
+    "@types/three": "0.174.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  }
+}

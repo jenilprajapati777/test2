@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "title": "Our Museum",
+    "plaque": "Jenil & Rutu — Our Museum",
+    "credit": "Made with love by Jenil",
+    "defaultCharacter": "rutu"
+  },
+  "photos": {
+    "P1": { "caption": "Placeholder caption for P1" },
+    "P2": { "caption": "Placeholder caption for P2" },
+    "P3": { "caption": "Placeholder caption for P3" },
+    "P4": { "caption": "Placeholder caption for P4" },
+    "P5": { "caption": "Placeholder caption for P5" },
+    "P6": { "caption": "Placeholder caption for P6" },
+    "P7": { "caption": "Placeholder caption for P7" },
+    "P8": { "caption": "Placeholder caption for P8" }
+  },
+  "videos": {
+    "V1": { "caption": "Placeholder video V1" },
+    "V2": { "caption": "Placeholder video V2" }
+  },
+  "boards": {
+    "B1": "Dummy text for B1 - edit me later.",
+    "B2": "Dummy text for B2 - edit me later.",
+    "B3": "Dummy text for B3 - edit me later.",
+    "B4": "Dummy text for B4 - edit me later.",
+    "B5": "Dummy text for B5 - edit me later."
+  },
+  "exits": {
+    "exit1": {
+      "signText": "Do you want to go out with me for a ride!",
+      "originalText": "Do you want to go out with me for a ride!",
+      "resultText": "Congratulations! You chose the right path.",
+      "originalResultText": "Congraculation you choose right path"
+    },
+    "exit2": {
+      "signText": "No, I will not come with you!",
+      "originalText": "no i will not coming with you!",
+      "resultText": "Sorry, you chose the wrong exit.",
+      "originalResultText": "sorry you choose the wrong exit",
+      "retryQuestion": "Do you need another chance?",
+      "yesLabel": "Yes, give me another chance",
+      "noLabel": "No",
+      "farewellText": "Okay... the museum will be here whenever you change your mind.",
+      "tryAgainLabel": "Actually, let me try again"
+    }
+  },
+  "ui": {
+    "replayLabel": "Replay the museum"
+  }
+}
