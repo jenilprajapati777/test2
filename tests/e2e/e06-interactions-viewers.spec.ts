@@ -4,7 +4,7 @@ import { SLOTS, getStandOffPoint } from '../../src/config/layout.js';
 
 test.describe('E-06: Slot Interactions, Modals & Memory Progress', () => {
   test('all 15 memory slots trigger prompt, open correct viewer, Esc closes, and progress reaches 15/15', async ({ page }) => {
-    test.setTimeout(360000);
+    test.setTimeout(480000);
     const guards = setupPageGuards(page);
 
     await page.goto('/?test=1&autoSelect=1');

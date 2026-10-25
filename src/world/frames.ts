@@ -4,6 +4,7 @@ import { MaterialPalette } from './materials.js';
 import { ContentSchema } from '../config/content.js';
 import { PlaceholderTextures } from '../media/placeholderTextures.js';
 import { MediaResolver } from '../media/mediaResolver.js';
+import { VideoManager } from '../media/videoManager.js';
 
 export interface FrameMeshItem {
   slot: Slot;
@@ -19,12 +20,19 @@ export class FramesBuilder {
   private materials: MaterialPalette;
   private content: ContentSchema;
   private mediaResolver: MediaResolver;
+  private videoManager?: VideoManager;
   private textureLoader = new THREE.TextureLoader();
 
-  constructor(materials: MaterialPalette, content: ContentSchema, mediaResolver: MediaResolver) {
+  constructor(
+    materials: MaterialPalette,
+    content: ContentSchema,
+    mediaResolver: MediaResolver,
+    videoManager?: VideoManager
+  ) {
     this.materials = materials;
     this.content = content;
     this.mediaResolver = mediaResolver;
+    this.videoManager = videoManager;
     this.group = new THREE.Group();
     this.group.name = 'FramesGroup';
 
@@ -151,7 +159,7 @@ export class FramesBuilder {
     // 16:9 Screen plane
     const screenGeo = new THREE.PlaneGeometry(boxW - 0.08, boxH - 0.08);
     const { texture: phTex, update: phUpdate } = PlaceholderTextures.createVideoPlaceholder(slot.id);
-    const screenMat = new THREE.MeshBasicMaterial({ map: phTex });
+    const screenMat = new THREE.MeshBasicMaterial({ map: phTex, toneMapped: false });
     const screenMesh = new THREE.Mesh(screenGeo, screenMat);
     screenMesh.position.set(0, 0, bezelDepth / 2 + 0.002);
     parent.add(screenMesh);
@@ -162,11 +170,19 @@ export class FramesBuilder {
       contentMesh: screenMesh,
       update: phUpdate,
       updateTexture: (tex: THREE.Texture) => {
-        screenMesh.material = new THREE.MeshBasicMaterial({ map: tex });
+        screenMesh.material = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });
       }
     };
 
     this.frameItems.set(slot.id, frameItem);
+
+    // Bind continuous live video playback directly to 3D museum screen
+    if (this.videoManager) {
+      this.videoManager.onTextureReady(slot.id, (tex) => {
+        frameItem.updateTexture!(tex);
+        frameItem.update = undefined;
+      });
+    }
   }
 
   private buildBoardPlaque(slot: Slot, parent: THREE.Group): void {

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { SLOTS } from '../config/layout.js';
 import { MediaResolver } from './mediaResolver.js';
 
@@ -5,8 +6,10 @@ export interface VideoPlayerEntry {
   slotId: string;
   planPos: [number, number];
   videoEl: HTMLVideoElement | null;
+  texture: THREE.VideoTexture | null;
   isPlaying: boolean;
   isViewerOpen: boolean;
+  onTextureReadyCbs: Array<(tex: THREE.VideoTexture) => void>;
 }
 
 export class VideoManager {
@@ -24,8 +27,10 @@ export class VideoManager {
         slotId: 'V1',
         planPos: v1Slot.pos,
         videoEl: null,
+        texture: null,
         isPlaying: false,
-        isViewerOpen: false
+        isViewerOpen: false,
+        onTextureReadyCbs: []
       });
     }
 
@@ -34,8 +39,10 @@ export class VideoManager {
         slotId: 'V2',
         planPos: v2Slot.pos,
         videoEl: null,
+        texture: null,
         isPlaying: false,
-        isViewerOpen: false
+        isViewerOpen: false,
+        onTextureReadyCbs: []
       });
     }
 
@@ -50,34 +57,82 @@ export class VideoManager {
       if (info.kind === 'file') {
         const video = document.createElement('video');
         video.src = info.source;
+        video.crossOrigin = 'anonymous';
         video.muted = true;
         video.loop = true;
         video.playsInline = true;
-        video.preload = 'metadata';
+        video.autoplay = true;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.preload = 'auto';
+
+        const texture = new THREE.VideoTexture(video);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+
         entry.videoEl = video;
+        entry.texture = texture;
+
+        // Start playing continuously in the museum
+        const playContinuously = () => {
+          video.muted = true;
+          video.play().then(() => {
+            entry.isPlaying = true;
+          }).catch(() => {});
+        };
+
+        playContinuously();
+
+        // Unlock autoplay on first user interaction if blocked by browser policy
+        const unlock = () => {
+          playContinuously();
+          window.removeEventListener('click', unlock);
+          window.removeEventListener('keydown', unlock);
+          window.removeEventListener('touchstart', unlock);
+          window.removeEventListener('pointerdown', unlock);
+        };
+        window.addEventListener('click', unlock, { passive: true });
+        window.addEventListener('keydown', unlock, { passive: true });
+        window.addEventListener('touchstart', unlock, { passive: true });
+        window.addEventListener('pointerdown', unlock, { passive: true });
+
+        // Notify waiting listeners
+        for (const cb of entry.onTextureReadyCbs) {
+          cb(texture);
+        }
+        entry.onTextureReadyCbs = [];
       }
     }
   }
 
-  public update(playerPlanX: number, playerPlanY: number): void {
-    for (const entry of this.entries.values()) {
-      if (!entry.videoEl || entry.isViewerOpen) continue;
+  public getVideoTexture(slotId: string): THREE.VideoTexture | null {
+    return this.entries.get(slotId)?.texture || null;
+  }
 
-      const dist = Math.hypot(playerPlanX - entry.planPos[0], playerPlanY - entry.planPos[1]);
-      if (dist <= 7.0) {
-        if (!entry.isPlaying) {
-          entry.videoEl.muted = true;
-          entry.videoEl.play().then(() => {
-            entry.isPlaying = true;
-          }).catch(() => {
-            // Browser autoplay policy ignored gracefully
-          });
-        }
-      } else {
-        if (entry.isPlaying) {
-          entry.videoEl.pause();
-          entry.isPlaying = false;
-        }
+  public onTextureReady(slotId: string, cb: (tex: THREE.VideoTexture) => void): void {
+    const entry = this.entries.get(slotId);
+    if (!entry) return;
+    if (entry.texture) {
+      cb(entry.texture);
+    } else {
+      entry.onTextureReadyCbs.push(cb);
+    }
+  }
+
+  public update(_playerPlanX: number, _playerPlanY: number): void {
+    for (const entry of this.entries.values()) {
+      if (!entry.videoEl) continue;
+
+      // Keep playing continuously across the entire museum
+      if (entry.videoEl.paused && !entry.isViewerOpen) {
+        entry.videoEl.muted = true;
+        entry.videoEl.play().catch(() => {});
+      }
+
+      if (entry.texture && entry.videoEl.readyState >= entry.videoEl.HAVE_CURRENT_DATA) {
+        entry.texture.needsUpdate = true;
       }
     }
   }
@@ -102,6 +157,7 @@ export class VideoManager {
     entry.isViewerOpen = false;
     if (entry.videoEl) {
       entry.videoEl.muted = true;
+      entry.videoEl.play().catch(() => {});
     }
   }
 }

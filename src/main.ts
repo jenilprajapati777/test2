@@ -114,7 +114,7 @@ class MuseumApp {
     this.propsBuilder = new PropsBuilder(this.materials);
     this.scene.add(this.propsBuilder.group);
 
-    this.framesBuilder = new FramesBuilder(this.materials, this.content, this.mediaResolver);
+    this.framesBuilder = new FramesBuilder(this.materials, this.content, this.mediaResolver, this.videoManager);
     this.scene.add(this.framesBuilder.group);
 
     // 6. Camera & Characters Setup
