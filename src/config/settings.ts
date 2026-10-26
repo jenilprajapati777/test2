@@ -6,8 +6,8 @@ export const SETTINGS = {
     acceleration: 20.0,
     deceleration: 30.0,
     turnSpeed: 12.0,
-    jenilHeight: 1.75,
-    rutuHeight: 1.65
+    jenilHeight: 1.40,
+    rutuHeight: 1.30
   },
   companion: {
     followDistance: 1.8,

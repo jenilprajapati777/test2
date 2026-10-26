@@ -57,6 +57,7 @@ class MuseumApp {
   private viewedSlots = new Set<string>();
 
   private isMouseDown = false;
+  private isDancing = false;
   private lastMouseX = 0;
   private lastMouseY = 0;
   private timeScale = 1.0;
@@ -308,6 +309,14 @@ class MuseumApp {
   }
 
   private setupEventListeners(_canvas: HTMLCanvasElement): void {
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'KeyG' || e.repeat) return;
+
+      this.isDancing = !this.isDancing;
+      this.player.getModel().animator.setDancing(this.isDancing);
+      this.companion.getModel().animator.setDancing(this.isDancing);
+    });
+
     const startDrag = (clientX: number, clientY: number, target: EventTarget | null) => {
       // Don't intercept button or interactive clicks
       if (target instanceof HTMLElement && (

@@ -15,14 +15,64 @@ export interface CharacterLimbs {
 
 export class CharacterAnimator {
   private limbs: CharacterLimbs;
+  private modelVisual: THREE.Object3D | null = null;
+  private gltfMixer: THREE.AnimationMixer | null = null;
+  private walkAction: THREE.AnimationAction | null = null;
+  private danceAction: THREE.AnimationAction | null = null;
   private walkCycle = 0;
   private idleTime = 0;
+  private danceTime = 0;
+  private dancing = false;
 
   constructor(limbs: CharacterLimbs) {
     this.limbs = limbs;
   }
 
+  /** Attach an imported GLB's motion pivot once its model has loaded. */
+  public setModelVisual(visual: THREE.Object3D): void {
+    this.modelVisual = visual;
+  }
+
+  /** Use clips from a rigged GLB when they are available for this character. */
+  public setGLTFAnimations(
+    visual: THREE.Object3D,
+    walkClip: THREE.AnimationClip,
+    danceClip: THREE.AnimationClip | null
+  ): void {
+    this.modelVisual = visual;
+    this.gltfMixer = new THREE.AnimationMixer(visual);
+    this.walkAction = this.gltfMixer.clipAction(walkClip);
+    this.walkAction.setLoop(THREE.LoopRepeat, Infinity);
+
+    if (danceClip) {
+      this.danceAction = this.gltfMixer.clipAction(danceClip);
+      this.danceAction.setLoop(THREE.LoopRepeat, Infinity);
+    }
+
+    if (this.dancing) this.setDancing(true);
+  }
+
+  public setDancing(enabled: boolean): void {
+    this.dancing = enabled;
+    this.danceTime = 0;
+    if (enabled) {
+      this.walkAction?.fadeOut(0.15);
+      this.danceAction?.reset().fadeIn(0.15).play();
+    } else {
+      this.danceAction?.fadeOut(0.15);
+    }
+  }
+
+  public isDancing(): boolean {
+    return this.dancing;
+  }
+
   public update(dt: number, speed: number, isRunning: boolean): void {
+    if (this.dancing) {
+      this.updateDance(dt);
+      return;
+    }
+
     if (speed < 0.1) {
       // Idle animation: breathing 0.5 Hz
       this.idleTime += dt;
@@ -82,6 +132,55 @@ export class CharacterAnimator {
       this.limbs.chest.rotation.y = -cycleSin * 0.08;
       this.limbs.chest.rotation.x = isRunning ? 0.12 : 0.04; // subtle athletic lean forward
     }
+
+    this.updateImportedModel(dt, speed, isRunning);
+  }
+
+  private updateImportedModel(dt: number, speed: number, isRunning: boolean): void {
+    if (!this.modelVisual) return;
+
+    if (this.gltfMixer) {
+      if (speed < 0.1) {
+        this.walkAction?.stop();
+      } else {
+        if (this.walkAction && !this.walkAction.isRunning()) this.walkAction.reset().play();
+        if (this.walkAction) this.walkAction.timeScale = isRunning ? 1.45 : 1;
+      }
+      this.gltfMixer.update(dt);
+      return;
+    }
+
+    if (speed < 0.1) {
+      this.modelVisual.position.y = Math.sin(this.idleTime * Math.PI) * 0.008;
+      this.modelVisual.rotation.set(0, 0, 0);
+      return;
+    }
+
+    const stride = Math.sin(this.walkCycle);
+    this.modelVisual.position.y = Math.abs(Math.cos(this.walkCycle)) * (isRunning ? 0.055 : 0.032);
+    this.modelVisual.rotation.set(isRunning ? 0.07 : 0.035, 0, -stride * (isRunning ? 0.07 : 0.04));
+  }
+
+  private updateDance(dt: number): void {
+    this.danceTime += dt;
+    const beat = this.danceTime * 7;
+
+    if (this.gltfMixer) {
+      this.gltfMixer.update(dt);
+      return;
+    }
+
+    // Preserve the original procedural fallback's movement, while imported GLBs
+    // use this pivot-based dance so we do not depend on a model-specific skeleton.
+    this.limbs.chest.rotation.y = Math.sin(beat) * 0.24;
+    this.limbs.leftArm.rotation.x = Math.sin(beat) * 1.05;
+    this.limbs.rightArm.rotation.x = -Math.sin(beat) * 1.05;
+    this.limbs.leftLeg.rotation.x = Math.sin(beat) * 0.26;
+    this.limbs.rightLeg.rotation.x = -Math.sin(beat) * 0.26;
+
+    if (!this.modelVisual) return;
+    this.modelVisual.position.y = Math.abs(Math.sin(beat)) * 0.11;
+    this.modelVisual.rotation.set(0, Math.sin(beat * 0.5) * 0.32, Math.sin(beat) * 0.16);
   }
 
   public setFallingPose(time: number): void {

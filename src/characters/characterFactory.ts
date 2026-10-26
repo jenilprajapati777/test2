@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { CharacterAnimator, CharacterLimbs } from './animator.js';
 
 export type CharacterId = 'jenil' | 'rutu';
@@ -22,7 +23,8 @@ export class CharacterFactory {
    */
   public static createProcedural(id: CharacterId): CharacterModel {
     const isMale = id === 'jenil';
-    const height = isMale ? 1.75 : 1.65;
+    // Slightly smaller, storybook proportions for a cute in-world look.
+    const height = isMale ? 1.40 : 1.30;
     const scale = height / 1.75;
 
     const group = new THREE.Group();
@@ -594,6 +596,10 @@ export class CharacterFactory {
     };
 
     const animator = new CharacterAnimator(limbs);
+    // Keep the procedural character available while the asset downloads, then replace
+    // it with the supplied character model without delaying the rest of the museum.
+    const proceduralParts = group.children.filter((child) => child !== nameTag);
+    this.loadCharacterAsset(id, group, proceduralParts, nameTag, height, materials, animator);
 
     const setOpacity = (opacity: number) => {
       for (const mat of materials) {
@@ -635,6 +641,82 @@ export class CharacterFactory {
       setOpacity,
       updateNameTagDistance
     };
+  }
+
+  private static loadCharacterAsset(
+    id: CharacterId,
+    group: THREE.Group,
+    proceduralParts: THREE.Object3D[],
+    nameTag: THREE.Sprite,
+    targetHeight: number,
+    materials: THREE.Material[],
+    animator: CharacterAnimator
+  ): void {
+    const loader = new GLTFLoader();
+    // The original character GLBs are static. Use the supplied rigged walk
+    // versions as the rendered models so their skeleton clips can play.
+    const hasRiggedAnimations = id === 'jenil' || id === 'rutu';
+    const assetUrl = hasRiggedAnimations
+      ? `/assets/characters/${id}_walk_animation.glb`
+      : `/assets/characters/${id}.glb`;
+    loader.load(
+      assetUrl,
+      (gltf) => {
+        const asset = gltf.scene;
+        const bounds = new THREE.Box3().setFromObject(asset);
+        const size = bounds.getSize(new THREE.Vector3());
+        const center = bounds.getCenter(new THREE.Vector3());
+
+        if (size.y <= 0) {
+          console.error(`Character asset for ${id} has no height.`);
+          return;
+        }
+
+        // Scale and center every source model consistently with the player's collider.
+        const scale = targetHeight / size.y;
+        asset.scale.setScalar(scale);
+        asset.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
+        asset.name = `CharacterAsset_${id}`;
+
+        const motionPivot = new THREE.Group();
+        motionPivot.name = `CharacterMotion_${id}`;
+        motionPivot.add(asset);
+
+        asset.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          object.castShadow = true;
+          object.receiveShadow = true;
+          const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of meshMaterials) {
+            if (!materials.includes(material)) materials.push(material);
+          }
+        });
+
+        for (const part of proceduralParts) group.remove(part);
+        group.add(motionPivot);
+        const walkClipName = id === 'rutu' ? 'Walking_Woman' : 'Walking';
+        const danceClipName = id === 'rutu' ? 'You_Groove' : 'Boom_Dance';
+        const walkClip = gltf.animations.find((clip) => clip.name === walkClipName);
+        if (!hasRiggedAnimations || !walkClip) {
+          animator.setModelVisual(motionPivot);
+        } else {
+          animator.setGLTFAnimations(motionPivot, walkClip, null);
+          loader.load(
+            `/assets/characters/${id}_dance_animation.glb`,
+            (danceGltf) => {
+              const danceClip = danceGltf.animations.find((clip) => clip.name === danceClipName) ?? null;
+              animator.setGLTFAnimations(motionPivot, walkClip, danceClip);
+            },
+            undefined,
+            (error) => console.error(`Unable to load ${id} dance animation.`, error)
+          );
+        }
+        // The label is deliberately kept above the normalized source model.
+        nameTag.position.y = targetHeight + 0.20;
+      },
+      undefined,
+      (error) => console.error(`Unable to load ${id} character asset.`, error)
+    );
   }
 
   private static createNameTagSprite(name: string): THREE.Sprite {
