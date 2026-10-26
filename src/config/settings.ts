@@ -27,8 +27,9 @@ export const SETTINGS = {
     orbitSensitivity: 0.0045,
     dampingFactor: 8.0,
     wallBuffer: 0.3,
-    fadeDistance: 1.5,
-    playerFadeOpacity: 0.35,
+    // Keep the view clean when the camera is pushed close by a wall.
+    fadeDistance: 1.9,
+    playerFadeOpacity: 0.06,
     fovDesktop: 60,
     fovMobile: 70,
     near: 0.05,

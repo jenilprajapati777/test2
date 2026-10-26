@@ -2,6 +2,7 @@ import { Minimap } from './minimap.js';
 
 export interface HudOptions {
   onToggleMute: () => void;
+  onToggleDance: () => boolean;
 }
 
 export class MuseumHUD {
@@ -9,6 +10,7 @@ export class MuseumHUD {
   public minimap: Minimap;
   private memoryBadge: HTMLElement;
   private muteBtn: HTMLButtonElement;
+  private danceBtn: HTMLButtonElement;
   private isMuted = false;
 
   constructor(options: HudOptions) {
@@ -33,6 +35,16 @@ export class MuseumHUD {
     this.memoryBadge.textContent = 'Memories found: 0/15';
     topRight.appendChild(this.memoryBadge);
 
+    this.danceBtn = document.createElement('button');
+    this.danceBtn.className = 'hud-dance-btn';
+    this.danceBtn.id = 'btn-toggle-dance';
+    this.danceBtn.setAttribute('aria-label', 'Toggle character dance');
+    this.danceBtn.innerHTML = '<span aria-hidden="true">💃</span><span>Dance</span>';
+    this.danceBtn.addEventListener('click', () => {
+      this.setDanceMode(options.onToggleDance());
+    });
+    topRight.appendChild(this.danceBtn);
+
     this.muteBtn = document.createElement('button');
     this.muteBtn.className = 'hud-icon-btn';
     this.muteBtn.id = 'btn-toggle-mute';
@@ -52,7 +64,7 @@ export class MuseumHUD {
     bottomCenter.className = 'hud-bottom-center';
     bottomCenter.innerHTML = `
       <div class="controls-hint">
-        WASD to walk &bull; Shift to run &bull; Drag to look &bull; E to interact &bull; M to mute &bull; Tab for map
+        WASD to walk &bull; Shift to run &bull; Drag to look &bull; E to interact &bull; G to dance &bull; M to mute
       </div>
     `;
     this.container.appendChild(bottomCenter);
@@ -73,5 +85,10 @@ export class MuseumHUD {
 
   public updateMemoryCount(count: number, total = 15): void {
     this.memoryBadge.textContent = `Memories found: ${count}/${total}`;
+  }
+
+  public setDanceMode(isDancing: boolean): void {
+    this.danceBtn.classList.toggle('is-dancing', isDancing);
+    this.danceBtn.querySelector('span:last-child')!.textContent = isDancing ? 'Dancing!' : 'Dance';
   }
 }

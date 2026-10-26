@@ -180,7 +180,8 @@ class MuseumApp {
     });
 
     this.hud = new MuseumHUD({
-      onToggleMute: () => this.audioManager.toggleMute()
+      onToggleMute: () => this.audioManager.toggleMute(),
+      onToggleDance: () => this.toggleDance()
     });
     uiContainer.appendChild(this.hud.getElement());
 
@@ -311,10 +312,7 @@ class MuseumApp {
   private setupEventListeners(_canvas: HTMLCanvasElement): void {
     window.addEventListener('keydown', (e) => {
       if (e.code !== 'KeyG' || e.repeat) return;
-
-      this.isDancing = !this.isDancing;
-      this.player.getModel().animator.setDancing(this.isDancing);
-      this.companion.getModel().animator.setDancing(this.isDancing);
+      this.toggleDance();
     });
 
     const startDrag = (clientX: number, clientY: number, target: EventTarget | null) => {
@@ -386,6 +384,14 @@ class MuseumApp {
       const isMobilePortrait = width < 600 && height > width;
       this.cameraRig.setAspectRatio(width / height, isMobilePortrait);
     });
+  }
+
+  private toggleDance(): boolean {
+    this.isDancing = !this.isDancing;
+    this.player.getModel().animator.setDancing(this.isDancing);
+    this.companion.getModel().animator.setDancing(this.isDancing);
+    this.hud.setDanceMode(this.isDancing);
+    return this.isDancing;
   }
 
   private loop(now: number): void {

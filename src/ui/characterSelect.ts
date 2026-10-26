@@ -45,14 +45,15 @@ export class CharacterSelectUI {
 
     this.container.innerHTML = `
       <div class="character-select-modal">
+        <p class="select-eyebrow">✦ A tiny world made for two ✦</p>
         <h1 class="select-title">Welcome to Our Museum</h1>
-        <p class="select-subtitle">Choose who you want to walk as. The other will walk with you!</p>
+        <p class="select-subtitle">Pick your character — the other one will be right there beside you.</p>
 
         <div class="characters-grid">
           <!-- Rutu Card -->
           <div class="character-card ${defaultChar === 'rutu' ? 'recommended' : ''}" data-character="rutu" id="card-rutu">
             <div class="char-preview-box">
-              <div class="char-avatar-badge rutu-badge">👩</div>
+              <div class="char-avatar-badge rutu-badge">🌷</div>
             </div>
             <h2 class="char-name">Rutu</h2>
             <p class="char-role">Special Guest &amp; Owner</p>
@@ -63,7 +64,7 @@ export class CharacterSelectUI {
           <!-- Jenil Card -->
           <div class="character-card ${defaultChar === 'jenil' ? 'recommended' : ''}" data-character="jenil" id="card-jenil">
             <div class="char-preview-box">
-              <div class="char-avatar-badge jenil-badge">👨</div>
+              <div class="char-avatar-badge jenil-badge">✨</div>
             </div>
             <h2 class="char-name">Jenil</h2>
             <p class="char-role">Museum Creator</p>
@@ -72,7 +73,7 @@ export class CharacterSelectUI {
           </div>
         </div>
 
-        <p class="select-hint">WASD / Arrow Keys to walk &bull; Drag mouse to look &bull; Press E to interact</p>
+        <p class="select-hint">WASD / Arrow Keys to walk &bull; Drag mouse to look &bull; E to inspect &bull; G to dance together</p>
       </div>
     `;
 

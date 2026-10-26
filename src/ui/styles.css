@@ -786,3 +786,112 @@ html, body {
     font-size: 1.8rem;
   }
 }
+
+/* Storybook polish */
+html, body {
+  background: radial-gradient(circle at 50% 0%, #33263d 0%, #120e16 48%, #08070a 100%);
+}
+
+.screen-overlay {
+  background: radial-gradient(circle at 50% 18%, rgba(83, 54, 76, 0.72), rgba(12, 10, 14, 0.94));
+}
+
+.loading-modal,
+.character-select-modal {
+  background: linear-gradient(145deg, rgba(55, 39, 55, 0.98), rgba(22, 19, 30, 0.98));
+  border-color: rgba(255, 216, 149, 0.45);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.character-select-modal {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.character-select-modal::before {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  top: -245px;
+  left: -110px;
+  border-radius: 50%;
+  background: rgba(255, 174, 202, 0.11);
+  pointer-events: none;
+}
+
+.select-eyebrow {
+  position: relative;
+  color: #ffcfde;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+
+.select-title {
+  color: #fff3d6;
+  text-shadow: 0 3px 18px rgba(255, 174, 202, 0.25);
+}
+
+.character-card {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+}
+
+.character-card:hover {
+  transform: translateY(-7px) rotate(-0.6deg);
+  border-color: #ffd2a6;
+  box-shadow: 0 16px 34px rgba(255, 154, 190, 0.22);
+}
+
+.character-card.recommended {
+  border-color: #ffd596;
+  background: linear-gradient(150deg, rgba(255, 199, 133, 0.18), rgba(255, 126, 175, 0.09));
+}
+
+.char-preview-box {
+  background: radial-gradient(circle at 35% 30%, #fff8e5, #f4a9c3 42%, #9a668a);
+  border: 3px solid rgba(255, 247, 229, 0.7);
+  box-shadow: 0 8px 20px rgba(255, 153, 191, 0.28);
+}
+
+.char-avatar-badge {
+  filter: drop-shadow(0 3px 3px rgba(69, 35, 52, 0.25));
+}
+
+.select-btn {
+  background: linear-gradient(135deg, #ffd083, #f39ab9);
+  color: #3b182b;
+  box-shadow: 0 7px 18px rgba(242, 128, 171, 0.2);
+}
+
+.hud-dance-btn {
+  min-height: 44px;
+  border: 1px solid rgba(255, 210, 228, 0.44);
+  border-radius: 22px;
+  padding: 0 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  cursor: pointer;
+  color: #fff4f7;
+  font-weight: 750;
+  background: linear-gradient(135deg, rgba(179, 74, 123, 0.9), rgba(119, 68, 145, 0.92));
+  box-shadow: 0 5px 16px rgba(88, 26, 70, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.hud-dance-btn:hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.1); }
+.hud-dance-btn.is-dancing {
+  animation: danceButtonPulse 0.65s infinite alternate ease-in-out;
+  background: linear-gradient(135deg, #f26d9c, #b768df);
+}
+
+@keyframes danceButtonPulse {
+  from { box-shadow: 0 4px 13px rgba(244, 104, 170, 0.35); }
+  to { box-shadow: 0 6px 25px rgba(255, 191, 92, 0.75); transform: translateY(-1px) scale(1.04); }
+}

@@ -6,6 +6,8 @@ export class PropsBuilder {
   public exit1Door: THREE.Mesh;
   public exit2Door: THREE.Mesh;
   private materials: MaterialPalette;
+  private accentLights: THREE.PointLight[] = [];
+  private glowingOrbs: THREE.Mesh[] = [];
 
   constructor(materials: MaterialPalette) {
     this.materials = materials;
@@ -21,6 +23,7 @@ export class PropsBuilder {
     this.buildStanchions();
     this.buildDoorways();
     this.buildFoyerPlaque();
+    this.buildGalleryAtmosphere();
   }
 
   // 1. Marble Monument Pillar
@@ -274,11 +277,126 @@ export class PropsBuilder {
     this.group.add(plaque);
   }
 
+  // 8. Soft furnishings and decorative lighting make the rooms feel curated,
+  // while all pieces remain clear of the player paths and collision geometry.
+  private buildGalleryAtmosphere(): void {
+    this.createRug(0, 9.7, 3.8, 4.8, 0x5b1d35);
+    this.createRug(0, -5.3, 4.6, 1.25, 0x432246);
+    this.createRug(-13, 0, 3.5, 1.1, 0x263e58);
+    this.createRug(13, -3, 3.5, 1.1, 0x4d294e);
+
+    // Brass-and-opal wall lights across the long gallery walls.
+    const sconces: [number, number, number][] = [
+      [-9.78, 2.5, -5.0], [-9.78, 2.5, -1.3], [-9.78, 2.5, 3.8],
+      [9.78, 2.5, -4.5], [9.78, 2.5, -0.2], [9.78, 2.5, 4.4],
+      [-13, 2.5, -1.9], [-13, 2.5, 1.9], [13, 2.5, -4.9], [13, 2.5, -1.2]
+    ];
+    for (const [x, y, z] of sconces) this.createSconce(x, y, z);
+
+    // Four pendant globes subtly frame the central monument below the skylight.
+    for (const [x, z] of [[-4.5, -3.4], [4.5, -3.4], [-4.5, 3.4], [4.5, 3.4]]) {
+      this.createPendant(x, z);
+    }
+
+    // Quiet little plinths give the side galleries a more exhibition-like rhythm.
+    this.createDisplayPlinth(-14.6, 0, 0x8aa7c7);
+    this.createDisplayPlinth(14.6, -3, 0xe0a1bd);
+  }
+
+  private createRug(planX: number, planY: number, width: number, depth: number, color: number): void {
+    const rug = new THREE.Mesh(
+      new THREE.BoxGeometry(width, 0.025, depth),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.02 })
+    );
+    rug.position.set(planX, 0.018, -planY);
+    rug.receiveShadow = true;
+    this.group.add(rug);
+
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0xe5bc64, metalness: 0.7, roughness: 0.28 });
+    const edgeY = 0.036;
+    const edgeZ = -planY;
+    for (const [w, d, x, z] of [
+      [width, 0.035, planX, edgeZ - depth / 2], [width, 0.035, planX, edgeZ + depth / 2],
+      [0.035, depth, planX - width / 2, edgeZ], [0.035, depth, planX + width / 2, edgeZ]
+    ]) {
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.018, d), edgeMat);
+      edge.position.set(x, edgeY, z);
+      this.group.add(edge);
+    }
+  }
+
+  private createSconce(x: number, y: number, z: number): void {
+    const plate = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.16, 0.035, 16),
+      this.materials.brassMaterial
+    );
+    plate.rotation.x = Math.PI / 2;
+    plate.position.set(x, y, z);
+    this.group.add(plate);
+
+    const shadeMat = new THREE.MeshStandardMaterial({
+      color: 0xffddb0, emissive: 0xff9b55, emissiveIntensity: 1.4, roughness: 0.28
+    });
+    const shade = new THREE.Mesh(new THREE.SphereGeometry(0.115, 18, 12), shadeMat);
+    shade.position.set(x, y, z);
+    this.group.add(shade);
+    this.glowingOrbs.push(shade);
+
+    const light = new THREE.PointLight(0xffbd74, 0.34, 4, 2);
+    light.position.set(x, y, z);
+    this.group.add(light);
+    this.accentLights.push(light);
+  }
+
+  private createPendant(x: number, z: number): void {
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.05, 8), this.materials.brassMaterial);
+    cord.position.set(x, 3.82, z);
+    this.group.add(cord);
+
+    const globeMat = new THREE.MeshStandardMaterial({
+      color: 0xffe6b8, emissive: 0xffa648, emissiveIntensity: 1.1, roughness: 0.18, metalness: 0.08
+    });
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 14), globeMat);
+    globe.position.set(x, 3.22, z);
+    globe.castShadow = true;
+    this.group.add(globe);
+    this.glowingOrbs.push(globe);
+
+    const light = new THREE.PointLight(0xffc47d, 0.45, 5.5, 2);
+    light.position.copy(globe.position);
+    this.group.add(light);
+    this.accentLights.push(light);
+  }
+
+  private createDisplayPlinth(x: number, planY: number, color: number): void {
+    const z = -planY;
+    const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.46, 0.92, 16), this.materials.marbleMaterial);
+    plinth.position.set(x, 0.46, z);
+    plinth.castShadow = true;
+    plinth.receiveShadow = true;
+    this.group.add(plinth);
+
+    const sculptureMat = new THREE.MeshStandardMaterial({ color, metalness: 0.58, roughness: 0.25 });
+    const sculpture = new THREE.Mesh(new THREE.TorusKnotGeometry(0.17, 0.055, 64, 10), sculptureMat);
+    sculpture.position.set(x, 1.12, z);
+    sculpture.rotation.x = Math.PI / 2;
+    this.group.add(sculpture);
+    this.glowingOrbs.push(sculpture);
+  }
+
   public update(time: number): void {
     // Pulse exit door glow gently
     const pulse1 = 0.75 + Math.sin(time * 2.5) * 0.2;
     const pulse2 = 0.75 + Math.cos(time * 2.5) * 0.2;
     (this.exit1Door.material as THREE.MeshBasicMaterial).opacity = pulse1;
     (this.exit2Door.material as THREE.MeshBasicMaterial).opacity = pulse2;
+
+    const warmPulse = 0.82 + Math.sin(time * 1.7) * 0.12;
+    for (const light of this.accentLights) light.intensity = warmPulse * (light.distance > 5 ? 0.45 : 0.34);
+    for (let i = 0; i < this.glowingOrbs.length; i++) {
+      const orb = this.glowingOrbs[i];
+      orb.rotation.y += 0.004 + (i % 3) * 0.001;
+      if (orb.geometry.type === 'TorusKnotGeometry') orb.rotation.z += 0.006;
+    }
   }
 }
