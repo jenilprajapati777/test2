@@ -75,11 +75,11 @@ export class PropsBuilder {
     ctx.font = 'bold 54px "Cinzel", "Times New Roman", serif, system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Jenil & Rutu', 512, 105);
+    ctx.fillText('Rutu', 512, 105);
 
     ctx.font = '36px "Cinzel", "Times New Roman", serif, system-ui';
     ctx.fillStyle = '#422806';
-    ctx.fillText('— Our Museum —', 512, 185);
+    ctx.fillText('— Museum —', 512, 185);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -259,7 +259,7 @@ export class PropsBuilder {
     ctx.font = '28px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Made with love by Jenil', 256, 128);
+    ctx.fillText('Made by Jenil', 256, 128);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
