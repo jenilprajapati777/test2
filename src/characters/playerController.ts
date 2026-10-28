@@ -133,10 +133,22 @@ export class PlayerController {
 
     this.isRunning = wantRun && this.speed > SETTINGS.player.walkSpeed + 0.2;
 
-    if (this.speed > 0.001 && inputMag > 0) {
-      this.vx = desiredDirX * this.speed;
-      this.vy = desiredDirY * this.speed;
-    } else if (this.speed <= 0.001) {
+    if (this.speed > 0.001) {
+      if (inputMag > 0) {
+        this.vx = desiredDirX * this.speed;
+        this.vy = desiredDirY * this.speed;
+      } else {
+        const currentSpeed = Math.hypot(this.vx, this.vy);
+        if (currentSpeed > 1e-4) {
+          this.vx = (this.vx / currentSpeed) * this.speed;
+          this.vy = (this.vy / currentSpeed) * this.speed;
+        } else {
+          this.vx = 0;
+          this.vy = 0;
+          this.speed = 0;
+        }
+      }
+    } else {
       this.speed = 0;
       this.vx = 0;
       this.vy = 0;

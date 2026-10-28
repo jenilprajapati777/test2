@@ -652,6 +652,10 @@ export class CharacterFactory {
     materials: THREE.Material[],
     animator: CharacterAnimator
   ): void {
+    if (typeof window === 'undefined' || !window.location || !window.location.origin) {
+      return;
+    }
+
     const loader = new GLTFLoader();
     // The original character GLBs are static. Use the supplied rigged walk
     // versions as the rendered models so their skeleton clips can play.

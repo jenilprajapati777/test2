@@ -125,13 +125,13 @@ export function registerDebugApi(ctx: DebugApiContext): void {
             return;
           }
 
-          // Stuck detection: check if moved < 0.05m over 1.5s
+          // Stuck detection: check if moved < 0.08m over 2.5s after 3.0s initial startup grace period
           const moved = Math.hypot(currX - lastMoveX, currY - lastMoveY);
           if (moved > 0.08) {
             lastMoveX = currX;
             lastMoveY = currY;
             lastMoveTime = now;
-          } else if (now - lastMoveTime > 1500) {
+          } else if (now - startTime > 3000 && now - lastMoveTime > 2500) {
             // Stuck!
             clearInterval(interval);
             ctx.player.setVirtualKeys({});

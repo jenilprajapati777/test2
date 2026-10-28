@@ -96,6 +96,14 @@ export class FramesBuilder {
     outerMesh.castShadow = true;
     parent.add(outerMesh);
 
+    // Inner gold liner rim
+    const goldLiner = new THREE.Mesh(
+      new THREE.PlaneGeometry(boxW - border * 1.4, boxH - border * 1.4),
+      this.materials.goldTrimMaterial
+    );
+    goldLiner.position.set(0, 0, frameDepth / 2 + 0.001);
+    parent.add(goldLiner);
+
     // Inner white matte
     const matteGeo = new THREE.PlaneGeometry(boxW - border * 2, boxH - border * 2);
     const matteMat = new THREE.MeshStandardMaterial({ color: 0xfaf8f5, roughness: 0.9 });
@@ -226,29 +234,35 @@ export class FramesBuilder {
     this.frameItems.set(slot.id, frameItem);
   }
 
-  // Faked spotlight: additive light cone + wall glow
+  // Faked spotlight: brass picture lamp fixture + additive light cone
   private addFakeSpotlight(parent: THREE.Group, itemHeight: number): void {
-    // Spotlight fixture on top
-    const fixtureGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.12, 12);
-    const fixture = new THREE.Mesh(fixtureGeo, this.materials.brassMaterial);
-    fixture.rotation.x = Math.PI / 2;
-    fixture.position.set(0, itemHeight / 2 + 0.18, 0.12);
-    parent.add(fixture);
+    // Picture lamp horizontal brass arm & hood
+    const armGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.16, 8);
+    const arm = new THREE.Mesh(armGeo, this.materials.brassMaterial);
+    arm.rotation.x = Math.PI / 2;
+    arm.position.set(0, itemHeight / 2 + 0.16, 0.08);
+    parent.add(arm);
 
-    // Additive light cone
-    const coneGeo = new THREE.ConeGeometry(0.65, 1.4, 16, 1, true);
-    coneGeo.translate(0, -0.7, 0);
+    const hoodGeo = new THREE.CylinderGeometry(0.035, 0.035, Math.min(0.55, parent.position.length() > 0 ? 0.45 : 0.4), 12);
+    const hood = new THREE.Mesh(hoodGeo, this.materials.brassMaterial);
+    hood.rotation.z = Math.PI / 2;
+    hood.position.set(0, itemHeight / 2 + 0.16, 0.16);
+    parent.add(hood);
+
+    // Warm soft additive light cone
+    const coneGeo = new THREE.ConeGeometry(0.72, 1.5, 16, 1, true);
+    coneGeo.translate(0, -0.75, 0);
     const coneMat = new THREE.MeshBasicMaterial({
-      color: 0xfff0d0,
+      color: 0xfff2d6,
       transparent: true,
-      opacity: 0.1,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
     });
     const cone = new THREE.Mesh(coneGeo, coneMat);
-    cone.position.set(0, itemHeight / 2 + 0.18, 0.12);
-    cone.rotation.x = -0.15;
+    cone.position.set(0, itemHeight / 2 + 0.16, 0.16);
+    cone.rotation.x = -0.20;
     parent.add(cone);
   }
 
