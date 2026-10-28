@@ -5,7 +5,6 @@ export class LightingRig {
   public dustPoints: THREE.Points;
   public heartPoints: THREE.Points;
   public lightShaft: THREE.Mesh;
-  public lightShaftInner: THREE.Mesh;
   private dustPositions: Float32Array;
   private heartPositions: Float32Array;
   private heartVelocities: Float32Array;
@@ -19,13 +18,13 @@ export class LightingRig {
     hemiLight.position.set(0, 10, 0);
     this.group.add(hemiLight);
 
-    // 2. Directional Skylight over the central monument (casts soft detailed shadows)
+    // 2. Single Directional Skylight over the central monument (crisp, efficient shadow map)
     const skylight = new THREE.DirectionalLight(0xfff6e4, 1.45);
     skylight.position.set(1.8, 9.2, 1.5);
     skylight.target.position.set(0, 0, 0);
     skylight.castShadow = true;
-    skylight.shadow.mapSize.width = 2048;
-    skylight.shadow.mapSize.height = 2048;
+    skylight.shadow.mapSize.width = 1024;
+    skylight.shadow.mapSize.height = 1024;
     skylight.shadow.camera.near = 0.5;
     skylight.shadow.camera.far = 22;
     const d = 13;
@@ -37,63 +36,47 @@ export class LightingRig {
     this.group.add(skylight);
     this.group.add(skylight.target);
 
-    // 3. Warm gallery key spotlights
+    // 3. Warm gallery key spotlight (illumination only, no duplicate shadow pass)
     const hallSpot = new THREE.SpotLight(0xfff0da, 0.85, 26, Math.PI / 4.2, 0.4, 1.1);
     hallSpot.position.set(0, 4.4, 3.2);
     hallSpot.target.position.set(0, 0, 0);
-    hallSpot.castShadow = true;
-    hallSpot.shadow.mapSize.width = 1024;
-    hallSpot.shadow.mapSize.height = 1024;
-    hallSpot.shadow.bias = -0.0004;
+    hallSpot.castShadow = false;
     this.group.add(hallSpot);
     this.group.add(hallSpot.target);
 
-    // 4. Warm gallery ambient fills across corridors and alcoves
-    const point1 = new THREE.PointLight(0xffddbe, 0.75, 14, 1.2);
+    // 4. Strategic warm gallery ambient fills across corridors and alcoves
+    const point1 = new THREE.PointLight(0xffddbe, 0.70, 14, 1.2);
     point1.position.set(-13, 3.2, 0); // West photo alcove
     this.group.add(point1);
 
-    const point2 = new THREE.PointLight(0xffddbe, 0.75, 14, 1.2);
+    const point2 = new THREE.PointLight(0xffddbe, 0.70, 14, 1.2);
     point2.position.set(13, 3.2, 3); // East video alcove
     this.group.add(point2);
 
-    const point3 = new THREE.PointLight(0xffe4cc, 0.85, 15, 1.2);
+    const point3 = new THREE.PointLight(0xffe4cc, 0.80, 15, 1.2);
     point3.position.set(0, 3.2, -12); // Decision corridor / exit foyer
     this.group.add(point3);
 
-    const point4 = new THREE.PointLight(0xffebd2, 0.90, 15, 1.2);
+    const point4 = new THREE.PointLight(0xffebd2, 0.85, 15, 1.2);
     point4.position.set(0, 3.2, 10); // Entry foyer
     this.group.add(point4);
 
-    // 5. Dual-layered soft volumetric sunbeam shafts streaming from skylight
-    const shaftGeoOuter = new THREE.CylinderGeometry(2.4, 4.2, 4.5, 32, 1, true);
-    const shaftMatOuter = new THREE.MeshBasicMaterial({
+    // 5. Optimized volumetric sunbeam shaft streaming from skylight
+    const shaftGeo = new THREE.CylinderGeometry(2.2, 4.0, 4.5, 20, 1, true);
+    const shaftMat = new THREE.MeshBasicMaterial({
       color: 0xfff3d6,
       transparent: true,
-      opacity: 0.09,
+      opacity: 0.10,
       side: THREE.DoubleSide,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
-    this.lightShaft = new THREE.Mesh(shaftGeoOuter, shaftMatOuter);
+    this.lightShaft = new THREE.Mesh(shaftGeo, shaftMat);
     this.lightShaft.position.set(0, 2.25, 0);
     this.group.add(this.lightShaft);
 
-    const shaftGeoInner = new THREE.CylinderGeometry(1.6, 2.8, 4.5, 32, 1, true);
-    const shaftMatInner = new THREE.MeshBasicMaterial({
-      color: 0xfffae8,
-      transparent: true,
-      opacity: 0.12,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    this.lightShaftInner = new THREE.Mesh(shaftGeoInner, shaftMatInner);
-    this.lightShaftInner.position.set(0, 2.25, 0);
-    this.group.add(this.lightShaftInner);
-
-    // 6. Atmospheric floating dust motes (240 particles drifting in sunbeams)
-    const dustCount = 240;
+    // 6. Atmospheric floating dust motes (optimized count: 90 particles)
+    const dustCount = 90;
     const dustGeo = new THREE.BufferGeometry();
     this.dustPositions = new Float32Array(dustCount * 3);
     for (let i = 0; i < dustCount; i++) {
@@ -113,8 +96,8 @@ export class LightingRig {
     this.dustPoints = new THREE.Points(dustGeo, dustMat);
     this.group.add(this.dustPoints);
 
-    // 7. Floating romantic pastel heart & petal sparkles around the monument
-    const heartCount = 75;
+    // 7. Floating romantic pastel heart & petal sparkles around monument (35 particles)
+    const heartCount = 35;
     const heartGeo = new THREE.BufferGeometry();
     this.heartPositions = new Float32Array(heartCount * 3);
     this.heartVelocities = new Float32Array(heartCount);
@@ -182,11 +165,8 @@ export class LightingRig {
     }
     hAttr.needsUpdate = true;
 
-    // Gentle rhythmic pulse on volumetric sun shafts
-    const shaftOuterMat = this.lightShaft.material as THREE.MeshBasicMaterial;
-    shaftOuterMat.opacity = 0.08 + Math.sin(time * 0.75) * 0.025;
-
-    const shaftInnerMat = this.lightShaftInner.material as THREE.MeshBasicMaterial;
-    shaftInnerMat.opacity = 0.11 + Math.cos(time * 0.75) * 0.03;
+    // Gentle rhythmic pulse on volumetric sun shaft
+    const shaftMat = this.lightShaft.material as THREE.MeshBasicMaterial;
+    shaftMat.opacity = 0.09 + Math.sin(time * 0.75) * 0.025;
   }
 }

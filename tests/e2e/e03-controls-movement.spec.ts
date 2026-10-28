@@ -26,8 +26,10 @@ test.describe('E-03: Controls & Movement Physics', () => {
     expect(facingError).toBeLessThan(10);
 
     // 2. Hold Shift: sprint speed > 4.5 m/s
+    // Reset to runway start so sprint has full clear space and does not collide with north wall
+    await page.evaluate(() => (window as any).__MUSEUM__.teleport(6, -5, 0));
     await page.keyboard.down('ShiftLeft');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
 
     player = await page.evaluate(() => (window as any).__MUSEUM__.getPlayer());
     expect(player.speed).toBeGreaterThan(4.8);

@@ -40,7 +40,6 @@ export class WorldBuilder {
 
     // Polished brass doorway threshold inlays
     const thresholds: [number, number, number, number][] = [
-      // [centerX, planCenterY, width, depth]
       [0, -7.0, 8.0, 0.12],   // Foyer to Main Hall
       [-10.0, 0.0, 0.12, 4.0], // Main Hall to West Alcove
       [10.0, -3.0, 0.12, 4.0], // Main Hall to East Alcove
@@ -75,36 +74,31 @@ export class WorldBuilder {
 
       if (r.id === 'R2') {
         // Main Hall has skylight hole in the center: [-3, 3] x [-2.5, 2.5]
-        // 4 ceiling plates surrounding the central skylight
-        // South of hole: y in [-7, -2.5]
         const sGeo = new THREE.PlaneGeometry(width, -2.5 - -7);
         const sMesh = new THREE.Mesh(sGeo, this.materials.ceilingMaterial);
         sMesh.rotation.x = Math.PI / 2;
         sMesh.position.set(0, CEILING_HEIGHT, -((-7 + -2.5) / 2));
         ceilingGroup.add(sMesh);
 
-        // North of hole: y in [2.5, 9]
         const nGeo = new THREE.PlaneGeometry(width, 9 - 2.5);
         const nMesh = new THREE.Mesh(nGeo, this.materials.ceilingMaterial);
         nMesh.rotation.x = Math.PI / 2;
         nMesh.position.set(0, CEILING_HEIGHT, -((2.5 + 9) / 2));
         ceilingGroup.add(nMesh);
 
-        // West of hole: x in [-10, -3], y in [-2.5, 2.5]
         const wGeo = new THREE.PlaneGeometry(-3 - -10, 5.0);
         const wMesh = new THREE.Mesh(wGeo, this.materials.ceilingMaterial);
         wMesh.rotation.x = Math.PI / 2;
         wMesh.position.set((-10 + -3) / 2, CEILING_HEIGHT, 0);
         ceilingGroup.add(wMesh);
 
-        // East of hole: x in [3, 10], y in [-2.5, 2.5]
         const eGeo = new THREE.PlaneGeometry(10 - 3, 5.0);
         const eMesh = new THREE.Mesh(eGeo, this.materials.ceilingMaterial);
         eMesh.rotation.x = Math.PI / 2;
         eMesh.position.set((3 + 10) / 2, CEILING_HEIGHT, 0);
         ceilingGroup.add(eMesh);
 
-        // Ornate skylight wrought iron frame and mullions: hole is [-3, 3] x [-2.5, 2.5]
+        // Skylight frame and mullions
         this.buildSkylightArchitecturalGrid(ceilingGroup);
       } else {
         const geo = new THREE.PlaneGeometry(width, depth);
@@ -116,31 +110,17 @@ export class WorldBuilder {
     }
 
     // Coffered Architectural Ceiling Beams in Main Hall
-    // Transverse beams across X axis (spanning from x = -10 to +10, width = 20)
     const beamGeo = new THREE.BoxGeometry(20, 0.32, 0.28);
     for (const by of [-6, -4, 4, 6, 8]) {
       const beam = new THREE.Mesh(beamGeo, this.materials.beamMaterial);
       beam.position.set(0, CEILING_HEIGHT - 0.16, -by);
-      beam.castShadow = true;
       ceilingGroup.add(beam);
-
-      // Gold rosette bosses at intervals along the beams
-      for (const rx of [-8, -5, 0, 5, 8]) {
-        const rosette = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.08, 0.08, 0.04, 12),
-          this.materials.goldTrimMaterial
-        );
-        rosette.position.set(rx, CEILING_HEIGHT - 0.33, -by);
-        ceilingGroup.add(rosette);
-      }
     }
 
-    // Longitudinal connector beams forming coffered recessed bays
     const longBeamGeo = new THREE.BoxGeometry(0.28, 0.28, 16);
     for (const bx of [-7, 7]) {
       const longBeam = new THREE.Mesh(longBeamGeo, this.materials.beamMaterial);
       longBeam.position.set(bx, CEILING_HEIGHT - 0.14, -1);
-      longBeam.castShadow = true;
       ceilingGroup.add(longBeam);
     }
 
@@ -152,12 +132,10 @@ export class WorldBuilder {
     const skylightGroup = new THREE.Group();
     skylightGroup.name = 'SkylightGrid';
 
-    // Outer border frame (6.2m x 5.2m, 0.15m height)
     const outerFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(6.2, 0.16, 0.12),
+      new THREE.BoxGeometry(6.2, 0.14, 0.10),
       this.materials.skylightFrameMaterial
     );
-    // North and South frame bars
     const fN = outerFrame.clone();
     fN.position.set(0, CEILING_HEIGHT, -2.5);
     skylightGroup.add(fN);
@@ -166,9 +144,8 @@ export class WorldBuilder {
     fS.position.set(0, CEILING_HEIGHT, 2.5);
     skylightGroup.add(fS);
 
-    // East and West frame bars
     const fSide = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 0.16, 5.12),
+      new THREE.BoxGeometry(0.10, 0.14, 5.10),
       this.materials.skylightFrameMaterial
     );
     const fW = fSide.clone();
@@ -179,7 +156,7 @@ export class WorldBuilder {
     fE.position.set(3.0, CEILING_HEIGHT, 0);
     skylightGroup.add(fE);
 
-    // Internal glass pane
+    // Frosted glass pane
     const glass = new THREE.Mesh(
       new THREE.PlaneGeometry(5.95, 4.95),
       this.materials.skylightGlassMaterial
@@ -188,17 +165,15 @@ export class WorldBuilder {
     glass.position.set(0, CEILING_HEIGHT + 0.02, 0);
     skylightGroup.add(glass);
 
-    // Iron cross-mullions
-    // Transverse ribs (across X)
-    const ribGeoX = new THREE.BoxGeometry(6.0, 0.08, 0.06);
+    // Cross ribs
+    const ribGeoX = new THREE.BoxGeometry(6.0, 0.06, 0.05);
     for (const rz of [-1.25, 0, 1.25]) {
       const rib = new THREE.Mesh(ribGeoX, this.materials.skylightFrameMaterial);
       rib.position.set(0, CEILING_HEIGHT + 0.01, rz);
       skylightGroup.add(rib);
     }
 
-    // Longitudinal ribs (along Z)
-    const ribGeoZ = new THREE.BoxGeometry(0.06, 0.08, 5.0);
+    const ribGeoZ = new THREE.BoxGeometry(0.05, 0.06, 5.0);
     for (const rx of [-1.5, 0, 1.5]) {
       const rib = new THREE.Mesh(ribGeoZ, this.materials.skylightFrameMaterial);
       rib.position.set(rx, CEILING_HEIGHT + 0.01, 0);
@@ -224,12 +199,9 @@ export class WorldBuilder {
       const length = Math.hypot(dx, dy);
       if (length < 1e-4) continue;
 
-      // Wall center on segment
       const midX = (seg.x1 + seg.x2) / 2;
       const midY = (seg.y1 + seg.y2) / 2;
 
-      // Normal points inward toward room.
-      // Thickness extends outward (-nx, -ny) by WALL_THICKNESS / 2
       const wallCenterX = midX - (seg.nx * WALL_THICKNESS) / 2;
       const wallCenterY = midY - (seg.ny * WALL_THICKNESS) / 2;
       const wallCenterZ = -wallCenterY;
@@ -250,7 +222,7 @@ export class WorldBuilder {
       const trimX = midX + (seg.nx * 0.02);
       const trimY = midY + (seg.ny * 0.02);
 
-      // 1. Skirting board (base moulding in dark polished wood)
+      // 1. Skirting board
       const skirtingGeo = new THREE.BoxGeometry(
         isHorizontal ? length : 0.04,
         skirtingHeight,
@@ -261,16 +233,6 @@ export class WorldBuilder {
       skirtingMesh.receiveShadow = true;
       wallGroup.add(skirtingMesh);
 
-      // Gold beading line directly above skirting
-      const beadGeo = new THREE.BoxGeometry(
-        isHorizontal ? length : 0.025,
-        0.015,
-        isHorizontal ? 0.025 : length
-      );
-      const beadMesh = new THREE.Mesh(beadGeo, this.materials.goldTrimMaterial);
-      beadMesh.position.set(trimX, skirtingHeight + 0.008, -trimY);
-      wallGroup.add(beadMesh);
-
       // 2. Chair Rail / Dado moulding at y = 1.05m
       const chairRailGeo = new THREE.BoxGeometry(
         isHorizontal ? length : 0.045,
@@ -279,34 +241,9 @@ export class WorldBuilder {
       );
       const chairRailMesh = new THREE.Mesh(chairRailGeo, this.materials.wainscotMaterial);
       chairRailMesh.position.set(trimX, chairRailY, -trimY);
-      chairRailMesh.castShadow = true;
       wallGroup.add(chairRailMesh);
 
-      // 3. Lower Boiserie Wainscoting Panels between skirting (0.16m) and chair rail (1.05m)
-      if (length >= 1.6) {
-        const panelCount = Math.max(1, Math.floor(length / 1.5));
-        const panelWidth = (length - (panelCount + 1) * 0.15) / panelCount;
-        const panelHeight = chairRailY - chairRailHeight / 2 - (skirtingHeight + 0.05);
-
-        for (let i = 0; i < panelCount; i++) {
-          const t = ((i + 0.5) / panelCount) - 0.5;
-          const px = midX + (isHorizontal ? t * length : 0) + (seg.nx * 0.025);
-          const py = midY + (isHorizontal ? 0 : t * length) + (seg.ny * 0.025);
-
-          // Recessed wooden panel back
-          const panelGeo = new THREE.BoxGeometry(
-            isHorizontal ? panelWidth : 0.015,
-            panelHeight,
-            isHorizontal ? 0.015 : panelWidth
-          );
-          const panelMesh = new THREE.Mesh(panelGeo, this.materials.wainscotMaterial);
-          panelMesh.position.set(px, (skirtingHeight + 0.05 + chairRailY - chairRailHeight / 2) / 2, -py);
-          panelMesh.receiveShadow = true;
-          wallGroup.add(panelMesh);
-        }
-      }
-
-      // 4. Classical stepped crown cornice moulding along ceiling
+      // 3. Classical crown cornice moulding along ceiling
       const crownGeo = new THREE.BoxGeometry(
         isHorizontal ? length : 0.08,
         crownHeight,

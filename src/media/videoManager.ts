@@ -121,7 +121,10 @@ export class VideoManager {
     }
   }
 
-  public update(_playerPlanX: number, _playerPlanY: number): void {
+  private frameCount = 0;
+
+  public update(playerPlanX: number, playerPlanY: number): void {
+    this.frameCount++;
     for (const entry of this.entries.values()) {
       if (!entry.videoEl) continue;
 
@@ -132,7 +135,18 @@ export class VideoManager {
       }
 
       if (entry.texture && entry.videoEl.readyState >= entry.videoEl.HAVE_CURRENT_DATA) {
-        entry.texture.needsUpdate = true;
+        const dx = entry.planPos[0] - playerPlanX;
+        const dy = entry.planPos[1] - playerPlanY;
+        const distSq = dx * dx + dy * dy;
+
+        // Adaptive update frequency based on distance to player
+        if (distSq < 12 * 12) {
+          entry.texture.needsUpdate = true;
+        } else if (distSq < 22 * 22) {
+          if (this.frameCount % 2 === 0) entry.texture.needsUpdate = true;
+        } else {
+          if (this.frameCount % 6 === 0) entry.texture.needsUpdate = true;
+        }
       }
     }
   }

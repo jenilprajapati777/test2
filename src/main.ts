@@ -71,19 +71,27 @@ class MuseumApp {
     const canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
     const uiContainer = document.querySelector('#ui-container') as HTMLElement;
 
-    // 1. Renderer setup
+    // 1. Renderer setup with adaptive device performance
+    const isMobileOrLowEnd =
+      typeof navigator !== 'undefined' &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4) ||
+        window.innerWidth < 800);
+
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
-      powerPreference: 'high-performance'
+      antialias: !isMobileOrLowEnd,
+      powerPreference: 'high-performance',
+      precision: isMobileOrLowEnd ? 'mediump' : 'highp'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const maxDpr = isMobileOrLowEnd ? 1.25 : 1.5;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // 2. State & Core Systems
     this.stateMachine = new GameStateMachine(false);

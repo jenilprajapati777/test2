@@ -9,12 +9,19 @@ export class PropsBuilder {
   private accentLights: THREE.PointLight[] = [];
   private glowingOrbs: THREE.Mesh[] = [];
   private rotatingArtifacts: THREE.Object3D[] = [];
-  private fairyLights: THREE.Mesh[] = [];
+  private fairyLightMat: THREE.MeshStandardMaterial;
 
   constructor(materials: MaterialPalette) {
     this.materials = materials;
     this.group = new THREE.Group();
     this.group.name = 'PropsGroup';
+
+    this.fairyLightMat = new THREE.MeshStandardMaterial({
+      color: 0xfffae0,
+      emissive: 0xffb54a,
+      emissiveIntensity: 1.5,
+      roughness: 0.25
+    });
 
     this.exit1Door = this.createExitDoor('exit1', [-9, 12.5], 0xffb732);
     this.exit2Door = this.createExitDoor('exit2', [9, 12.5], 0x4aa3ff);
@@ -137,18 +144,13 @@ export class PropsBuilder {
       metalness: 0.75
     });
     const plaqueMesh = new THREE.Mesh(plaqueGeo, plaqueMat);
-    // South face in 2D is y = -2.5 -> Three.js z = +2.53
     plaqueMesh.position.set(0, 2.2, 2.53);
-    plaqueMesh.castShadow = true;
     this.group.add(plaqueMesh);
   }
 
   // 2. Luxury Gallery Benches with Button-Tufted Velvet Cushions
   private buildBenches(): void {
-    // Bench A: x [0.5, 3.5], y [4.6, 5.2] -> width 3.0, depth 0.6, center x = 2.0, y = 4.9 -> Three.js z = -4.9
     this.createTuftedBench(2.0, -4.9, 3.0, 0.6, false);
-
-    // Bench B: x [-5.9, -5.3], y [-1.5, 1.5] -> width 0.6, depth 3.0, center x = -5.6, y = 0 -> Three.js z = 0
     this.createTuftedBench(-5.6, 0.0, 0.6, 3.0, true);
   }
 
@@ -157,57 +159,43 @@ export class PropsBuilder {
     const baseGeo = new THREE.BoxGeometry(width, 0.12, depth);
     const baseMesh = new THREE.Mesh(baseGeo, this.materials.woodMaterial);
     baseMesh.position.set(x, 0.42, z);
-    baseMesh.castShadow = true;
     baseMesh.receiveShadow = true;
     this.group.add(baseMesh);
 
     // Brass perimeter accent rim
-    const rimGeo = new THREE.BoxGeometry(width + 0.04, 0.03, depth + 0.04);
+    const rimGeo = new THREE.BoxGeometry(width + 0.03, 0.02, depth + 0.03);
     const rimMesh = new THREE.Mesh(rimGeo, this.materials.brassMaterial);
     rimMesh.position.set(x, 0.47, z);
     this.group.add(rimMesh);
 
     // Button-tufted velvet cushion
-    const cushionGeo = new THREE.BoxGeometry(width - 0.08, 0.14, depth - 0.08);
+    const cushionGeo = new THREE.BoxGeometry(width - 0.06, 0.12, depth - 0.06);
     const cushionMesh = new THREE.Mesh(cushionGeo, this.materials.tuftedCushionMaterial);
     cushionMesh.position.set(x, 0.54, z);
-    cushionMesh.castShadow = true;
     cushionMesh.receiveShadow = true;
     this.group.add(cushionMesh);
 
-    // Gold tufting buttons across the cushion
-    const buttonGeo = new THREE.SphereGeometry(0.022, 10, 8);
-    const numButtons = 6;
-    for (let i = 0; i < numButtons; i++) {
-      const t = ((i + 0.5) / numButtons) - 0.5;
-      const bx = isVertical ? x : x + t * (width - 0.5);
-      const bz = isVertical ? z + t * (depth - 0.5) : z;
-      const button = new THREE.Mesh(buttonGeo, this.materials.goldTrimMaterial);
-      button.position.set(bx, 0.615, bz);
-      this.group.add(button);
-    }
-
-    // Cylindrical bolster armrests at both bench ends
-    const armrestGeo = new THREE.CylinderGeometry(0.08, 0.08, isVertical ? width : depth - 0.04, 16);
+    // Bolster armrests at both bench ends
+    const armrestGeo = new THREE.CylinderGeometry(0.07, 0.07, isVertical ? width : depth - 0.04, 10);
     const arm1 = new THREE.Mesh(armrestGeo, this.materials.tuftedCushionMaterial);
     const arm2 = new THREE.Mesh(armrestGeo, this.materials.tuftedCushionMaterial);
     if (isVertical) {
       arm1.rotation.z = Math.PI / 2;
       arm2.rotation.z = Math.PI / 2;
-      arm1.position.set(x, 0.62, z - depth / 2 + 0.12);
-      arm2.position.set(x, 0.62, z + depth / 2 - 0.12);
+      arm1.position.set(x, 0.61, z - depth / 2 + 0.12);
+      arm2.position.set(x, 0.61, z + depth / 2 - 0.12);
     } else {
       arm1.rotation.x = Math.PI / 2;
       arm2.rotation.x = Math.PI / 2;
-      arm1.position.set(x - width / 2 + 0.12, 0.62, z);
-      arm2.position.set(x + width / 2 - 0.12, 0.62, z);
+      arm1.position.set(x - width / 2 + 0.12, 0.61, z);
+      arm2.position.set(x + width / 2 - 0.12, 0.61, z);
     }
     this.group.add(arm1);
     this.group.add(arm2);
 
-    // Turned brass & dark wood legs
+    // Turned legs
     const legMat = this.materials.doorFrameMaterial;
-    const legGeo = new THREE.CylinderGeometry(0.038, 0.025, 0.42, 12);
+    const legGeo = new THREE.CylinderGeometry(0.035, 0.025, 0.42, 8);
     const legOffsets = isVertical
       ? [[x - width / 2 + 0.08, z - depth / 2 + 0.18], [x + width / 2 - 0.08, z - depth / 2 + 0.18],
          [x - width / 2 + 0.08, z + depth / 2 - 0.18], [x + width / 2 - 0.08, z + depth / 2 - 0.18]]
@@ -218,17 +206,10 @@ export class PropsBuilder {
       const leg = new THREE.Mesh(legGeo, legMat);
       leg.position.set(lx, 0.21, lz);
       this.group.add(leg);
-
-      const foot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.035, 0.035, 0.06, 12),
-        this.materials.brassMaterial
-      );
-      foot.position.set(lx, 0.03, lz);
-      this.group.add(foot);
     }
   }
 
-  // 3. Lush Sculpted Botanical Planters
+  // 3. Sculpted Botanical Planters (optimized geometry)
   private buildPlants(): void {
     const plantCoords: [number, number][] = [
       [-9, 8],
@@ -250,53 +231,50 @@ export class PropsBuilder {
     for (const [x, y] of plantCoords) {
       const z = -y;
 
-      // Fluted ceramic planter body
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.28, 0.74, 20), potMat);
+      // Planter body
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.28, 0.74, 12), potMat);
       pot.position.set(x, 0.37, z);
-      pot.castShadow = true;
       pot.receiveShadow = true;
       this.group.add(pot);
 
       // Gold base ring and rim lip
-      const baseRim = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.035, 12, 24), this.materials.goldTrimMaterial);
+      const baseRim = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.03, 8, 16), this.materials.goldTrimMaterial);
       baseRim.rotation.x = Math.PI / 2;
       baseRim.position.set(x, 0.035, z);
       this.group.add(baseRim);
 
-      const topRim = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.04, 12, 24), this.materials.goldTrimMaterial);
+      const topRim = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.035, 8, 16), this.materials.goldTrimMaterial);
       topRim.rotation.x = Math.PI / 2;
       topRim.position.set(x, 0.74, z);
       this.group.add(topRim);
 
-      // Dark potting soil
-      const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.06, 16), soilMat);
+      // Soil
+      const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.06, 12), soilMat);
       soil.position.set(x, 0.72, z);
       this.group.add(soil);
 
-      // Multi-tiered organic foliage with varied fan-out and leaf angles
+      // Botanical foliage
       const foliageGroup = new THREE.Group();
       foliageGroup.position.set(x, 0.74, z);
 
-      // Central stem
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.7, 8), leafMatDark);
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.7, 6), leafMatDark);
       stem.position.set(0, 0.35, 0);
       foliageGroup.add(stem);
 
-      // 10 broad fan-out monstera / fig leaves
-      const leafCount = 10;
+      // 6 fan-out leaves
+      const leafCount = 6;
       for (let i = 0; i < leafCount; i++) {
-        const angle = (i / leafCount) * Math.PI * 2 + (i % 2) * 0.25;
-        const radius = 0.35 + (i % 3) * 0.12;
-        const height = 0.25 + (i / leafCount) * 0.55;
-        const mat = i % 3 === 0 ? leafMatLight : i % 2 === 0 ? leafMatMid : leafMatDark;
+        const angle = (i / leafCount) * Math.PI * 2;
+        const radius = 0.38;
+        const height = 0.28 + (i / leafCount) * 0.45;
+        const mat = i % 2 === 0 ? leafMatMid : i % 3 === 0 ? leafMatLight : leafMatDark;
 
-        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.55, 6), mat);
-        leaf.scale.set(1.4, 0.12, 1.0);
+        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.52, 5), mat);
+        leaf.scale.set(1.3, 0.12, 1.0);
         leaf.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
         leaf.rotation.x = Math.sin(angle) * 0.75;
         leaf.rotation.z = -Math.cos(angle) * 0.75;
         leaf.rotation.y = angle;
-        leaf.castShadow = true;
         foliageGroup.add(leaf);
       }
 
@@ -306,12 +284,10 @@ export class PropsBuilder {
 
   // 4. Stanchions with Gracefully Draped Royal Velvet Ropes
   private buildStanchionsAndRopes(): void {
-    const postGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.95, 14);
-    const baseGeo = new THREE.CylinderGeometry(0.16, 0.18, 0.06, 20);
+    const postGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.95, 8);
+    const baseGeo = new THREE.CylinderGeometry(0.16, 0.18, 0.06, 12);
     const postMat = this.materials.brassMaterial;
 
-    // Posts at 1m offset from pillar boundary: x in [-4, 4], y in [-3.5, 3.5]
-    // Arranged in closed clockwise loop
     const posts: [number, number][] = [
       [-3.8, -3.2],
       [0, -3.2],
@@ -333,16 +309,12 @@ export class PropsBuilder {
       post.position.set(x, 0.505, z);
       this.group.add(post);
 
-      const ringCollar = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.015, 8, 16), postMat);
-      ringCollar.position.set(x, 0.90, z);
-      this.group.add(ringCollar);
-
-      const topBall = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 14), postMat);
+      const topBall = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), postMat);
       topBall.position.set(x, 1.01, z);
       this.group.add(topBall);
     }
 
-    // Connect adjacent stanchion posts with gracefully sagging crimson velvet ropes
+    // Connect adjacent stanchion posts with velvet ropes (efficient 10-subdivision tubes)
     for (let i = 0; i < posts.length; i++) {
       const p1 = posts[i];
       const p2 = posts[(i + 1) % posts.length];
@@ -351,10 +323,9 @@ export class PropsBuilder {
       const p2x = p2[0];
       const p2z = -p2[1];
 
-      // Quadratic curve sagging in the center
       const midX = (p1x + p2x) / 2;
       const midZ = (p1z + p2z) / 2;
-      const sagY = 0.68; // Lowest point of sag
+      const sagY = 0.68;
 
       const curve = new THREE.QuadraticBezierCurve3(
         new THREE.Vector3(p1x, 0.90, p1z),
@@ -362,27 +333,15 @@ export class PropsBuilder {
         new THREE.Vector3(p2x, 0.90, p2z)
       );
 
-      const ropeGeo = new THREE.TubeGeometry(curve, 18, 0.024, 8, false);
+      const ropeGeo = new THREE.TubeGeometry(curve, 10, 0.024, 6, false);
       const ropeMesh = new THREE.Mesh(ropeGeo, this.materials.velvetRopeMaterial);
-      ropeMesh.castShadow = true;
       this.group.add(ropeMesh);
-
-      // Gold clasp rings at both endpoints
-      for (const [cx, cz] of [[p1x, p1z], [p2x, p2z]]) {
-        const clasp = new THREE.Mesh(
-          new THREE.TorusGeometry(0.038, 0.012, 8, 12),
-          this.materials.goldTrimMaterial
-        );
-        clasp.position.set(cx, 0.90, cz);
-        this.group.add(clasp);
-      }
     }
   }
 
   // 5. Doorways & Archways with Classical Columns and Fairy Lights
   private buildDoorways(): void {
-    // Grand 8m wide entrance archway between Entry Foyer and Main Hall at y = -7, z = +7
-    const pilasterGeo = new THREE.BoxGeometry(0.5, 4.5, 0.5);
+    const pilasterGeo = new THREE.BoxGeometry(0.45, 4.5, 0.45);
     const pilaster1 = new THREE.Mesh(pilasterGeo, this.materials.doorFrameMaterial);
     pilaster1.position.set(-4.0, 2.25, 7.0);
     this.group.add(pilaster1);
@@ -391,75 +350,61 @@ export class PropsBuilder {
     pilaster2.position.set(4.0, 2.25, 7.0);
     this.group.add(pilaster2);
 
-    // Gold capitals on pilasters
     for (const px of [-4.0, 4.0]) {
-      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.18, 0.62), this.materials.goldTrimMaterial);
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.55), this.materials.goldTrimMaterial);
       cap.position.set(px, 3.8, 7.0);
       this.group.add(cap);
 
-      const basePlinth = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.25, 0.62), this.materials.wainscotMaterial);
+      const basePlinth = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.25, 0.55), this.materials.wainscotMaterial);
       basePlinth.position.set(px, 0.125, 7.0);
       this.group.add(basePlinth);
     }
 
-    // Molded arch header beam
     const archHeader = new THREE.Mesh(
-      new THREE.BoxGeometry(8.5, 0.45, 0.55),
+      new THREE.BoxGeometry(8.5, 0.42, 0.5),
       this.materials.doorFrameMaterial
     );
     archHeader.position.set(0, 3.85, 7.0);
     this.group.add(archHeader);
 
-    // Classical ornamental keystone in arch center
     const keystone = new THREE.Mesh(
-      new THREE.BoxGeometry(0.42, 0.55, 0.62),
+      new THREE.BoxGeometry(0.4, 0.5, 0.58),
       this.materials.goldTrimMaterial
     );
     keystone.position.set(0, 3.95, 7.0);
     this.group.add(keystone);
 
-    // Romantic twinkling fairy lights draped across the entrance archway
+    // Fairy lights across entrance archway
     this.buildArchwayFairyLights(0, 7.0, 8.0, 3.9);
 
-    // Corridor exit doorways (3m wide, 2.8m high at y = 12.5, z = -12.5)
+    // Corridor exit doorways
     for (const x of [-3, 3]) {
-      const doorHeaderGeo = new THREE.BoxGeometry(0.45, 0.35, 3.2);
+      const doorHeaderGeo = new THREE.BoxGeometry(0.4, 0.35, 3.2);
       const doorHeader = new THREE.Mesh(doorHeaderGeo, this.materials.doorFrameMaterial);
       doorHeader.position.set(x, 2.8, -12.5);
       this.group.add(doorHeader);
-
-      const pediment = new THREE.Mesh(
-        new THREE.BoxGeometry(0.55, 0.08, 3.35),
-        this.materials.goldTrimMaterial
-      );
-      pediment.position.set(x, 2.98, -12.5);
-      this.group.add(pediment);
     }
   }
 
-  // Twinkling fairy lights string across archway
   private buildArchwayFairyLights(centerX: number, centerZ: number, spanWidth: number, heightY: number): void {
-    const bulbCount = 22;
-    const bulbGeo = new THREE.SphereGeometry(0.04, 10, 8);
-    const bulbMat = new THREE.MeshStandardMaterial({
-      color: 0xfffae0,
-      emissive: 0xffb54a,
-      emissiveIntensity: 1.5,
-      roughness: 0.2
-    });
+    const bulbCount = 16;
+    const bulbGeo = new THREE.SphereGeometry(0.04, 8, 6);
+    const instancedBulbs = new THREE.InstancedMesh(bulbGeo, this.fairyLightMat, bulbCount);
+    const dummy = new THREE.Object3D();
 
     for (let i = 0; i < bulbCount; i++) {
       const t = (i / (bulbCount - 1)) - 0.5;
       const x = centerX + t * (spanWidth - 0.6);
-      // Soft catenary sag across the arch
       const y = heightY - 0.15 - Math.cos(t * Math.PI) * 0.18;
       const z = centerZ;
 
-      const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-      bulb.position.set(x, y, z);
-      this.group.add(bulb);
-      this.fairyLights.push(bulb);
+      dummy.position.set(x, y, z);
+      dummy.updateMatrix();
+      instancedBulbs.setMatrixAt(i, dummy.matrix);
     }
+
+    instancedBulbs.instanceMatrix.needsUpdate = true;
+    this.group.add(instancedBulbs);
   }
 
   // 6. Glowing Exit Doors with Arch Portals
@@ -481,14 +426,13 @@ export class PropsBuilder {
     doorMesh.rotation.y = Math.PI / 2;
     this.group.add(doorMesh);
 
-    // Glowing architectural portal arch frame surrounding each exit door
     const portalFrame = new THREE.Mesh(
       new THREE.BoxGeometry(0.12, 3.0, 3.2),
       new THREE.MeshStandardMaterial({
         color: colorHex,
         emissive: colorHex,
-        emissiveIntensity: 0.6,
-        roughness: 0.3
+        emissiveIntensity: 0.5,
+        roughness: 0.35
       })
     );
     portalFrame.position.set(x, 1.5, z);
@@ -510,10 +454,6 @@ export class PropsBuilder {
     ctx.lineWidth = 6;
     ctx.strokeRect(10, 10, 492, 236);
 
-    ctx.strokeStyle = '#8c6b23';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(20, 20, 472, 216);
-
     ctx.fillStyle = '#f3d98c';
     ctx.font = 'bold 32px "Cinzel", "Times New Roman", serif';
     ctx.textAlign = 'center';
@@ -525,10 +465,9 @@ export class PropsBuilder {
 
     const plaque = new THREE.Mesh(
       new THREE.PlaneGeometry(1.6, 0.8),
-      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.32, metalness: 0.5 })
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35, metalness: 0.4 })
     );
     plaque.rotation.x = -Math.PI / 2;
-    // Embed in floor at Entry foyer (y = -10.5 -> z = +10.5)
     plaque.position.set(0, 0.015, 10.5);
     plaque.receiveShadow = true;
     this.group.add(plaque);
@@ -537,15 +476,10 @@ export class PropsBuilder {
   // 8. Gallery Atmosphere: Luxury Damask Rugs, Museum Glass Vitrines & Sconces
   private buildGalleryAtmosphere(): void {
     // A. Luxury Damask Carpets & Runners
-    // Grand entrance red runner in Entry Foyer
     this.createOrnateDamaskRug(0, -9.5, 3.4, 4.6, '#66162a', '#440f1d');
-    // Grand red runner framing south approach to monument
     this.createOrnateDamaskRug(0, -4.8, 4.2, 2.4, '#5e1526', '#3e0c19');
-    // Sapphire blue runner in West Photo Alcove
     this.createOrnateDamaskRug(-13.0, 0.0, 3.4, 1.4, '#1b324d', '#112033');
-    // Plum & Rose runner in East Video Alcove
     this.createOrnateDamaskRug(13.0, -3.0, 3.4, 1.4, '#4d1c3a', '#331126');
-    // Emerald runner approaching Decision Alcove
     this.createOrnateDamaskRug(0, 10.2, 3.8, 4.2, '#18472f', '#0f2d1e');
 
     // B. Wall Sconces with Brass & Opal Glass
@@ -554,17 +488,28 @@ export class PropsBuilder {
       [9.78, 2.5, -4.5], [9.78, 2.5, -0.2], [9.78, 2.5, 4.4],
       [-13, 2.5, -1.9], [-13, 2.5, 1.9], [13, 2.5, -4.9], [13, 2.5, -1.2]
     ];
-    for (const [x, y, z] of sconces) this.createSconce(x, y, z);
+    for (let i = 0; i < sconces.length; i++) {
+      const [x, y, z] = sconces[i];
+      // Only attach dynamic point lights to 2 key center sconces (indices 1 and 4)
+      const hasDynamicLight = i === 1 || i === 4;
+      this.createSconce(x, y, z, hasDynamicLight);
+    }
 
-    // C. Pendant Globes framing the Central Skylight
-    for (const [x, z] of [[-4.5, -3.4], [4.5, -3.4], [-4.5, 3.4], [4.5, 3.4]]) {
-      this.createPendant(x, z);
+    // C. Pendant Globes framing the Central Skylight (2 dynamic lights)
+    const pendants: [number, number, boolean][] = [
+      [-4.5, -3.4, true],
+      [4.5, -3.4, false],
+      [-4.5, 3.4, false],
+      [4.5, 3.4, true]
+    ];
+    for (const [x, z, hasLight] of pendants) {
+      this.createPendant(x, z, hasLight);
     }
 
     // D. Glass Exhibition Vitrines with Rotating Cute Romantic Keepsakes
-    this.createGlassDisplayVitrine(-14.6, 0.0, 'heart'); // West Alcove: Glowing Rose Quartz Heart
-    this.createGlassDisplayVitrine(14.6, -3.0, 'star');  // East Alcove: Iridescent Star Relic
-    this.createGlassDisplayVitrine(0.0, 14.2, 'flower'); // Decision Alcove: Luminous Crystal Blossom against north wall
+    this.createGlassDisplayVitrine(-14.6, 0.0, 'heart');
+    this.createGlassDisplayVitrine(14.6, -3.0, 'star');
+    this.createGlassDisplayVitrine(0.0, 14.2, 'flower');
   }
 
   private createOrnateDamaskRug(planX: number, planY: number, width: number, depth: number, primaryHex: string, borderHex: string): void {
@@ -579,26 +524,11 @@ export class PropsBuilder {
     rug.position.set(planX, 0.015, -planY);
     rug.receiveShadow = true;
     this.group.add(rug);
-
-    // Polished gold border piping
-    const edgeMat = this.materials.goldTrimMaterial;
-    const edgeY = 0.03;
-    const edgeZ = -planY;
-    for (const [w, d, x, z] of [
-      [width, 0.04, planX, edgeZ - depth / 2],
-      [width, 0.04, planX, edgeZ + depth / 2],
-      [0.04, depth, planX - width / 2, edgeZ],
-      [0.04, depth, planX + width / 2, edgeZ]
-    ]) {
-      const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.016, d), edgeMat);
-      edge.position.set(x, edgeY, z);
-      this.group.add(edge);
-    }
   }
 
-  private createSconce(x: number, y: number, z: number): void {
+  private createSconce(x: number, y: number, z: number, hasLight: boolean): void {
     const plate = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.16, 0.16, 0.035, 16),
+      new THREE.CylinderGeometry(0.15, 0.15, 0.03, 12),
       this.materials.brassMaterial
     );
     plate.rotation.x = Math.PI / 2;
@@ -611,19 +541,21 @@ export class PropsBuilder {
       emissiveIntensity: 1.4,
       roughness: 0.25
     });
-    const shade = new THREE.Mesh(new THREE.SphereGeometry(0.12, 18, 12), shadeMat);
+    const shade = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 10), shadeMat);
     shade.position.set(x, y, z);
     this.group.add(shade);
     this.glowingOrbs.push(shade);
 
-    const light = new THREE.PointLight(0xffbe7a, 0.38, 4.2, 2);
-    light.position.set(x, y, z);
-    this.group.add(light);
-    this.accentLights.push(light);
+    if (hasLight) {
+      const light = new THREE.PointLight(0xffbe7a, 0.45, 8.0, 2);
+      light.position.set(x, y, z);
+      this.group.add(light);
+      this.accentLights.push(light);
+    }
   }
 
-  private createPendant(x: number, z: number): void {
-    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.15, 8), this.materials.brassMaterial);
+  private createPendant(x: number, z: number, hasLight: boolean): void {
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.15, 6), this.materials.brassMaterial);
     cord.position.set(x, 3.82, z);
     this.group.add(cord);
 
@@ -634,19 +566,19 @@ export class PropsBuilder {
       roughness: 0.18,
       metalness: 0.08
     });
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.20, 20, 14), globeMat);
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.19, 14, 10), globeMat);
     globe.position.set(x, 3.22, z);
-    globe.castShadow = true;
     this.group.add(globe);
     this.glowingOrbs.push(globe);
 
-    const light = new THREE.PointLight(0xffc885, 0.48, 5.8, 2);
-    light.position.copy(globe.position);
-    this.group.add(light);
-    this.accentLights.push(light);
+    if (hasLight) {
+      const light = new THREE.PointLight(0xffc885, 0.50, 7.0, 2);
+      light.position.copy(globe.position);
+      this.group.add(light);
+      this.accentLights.push(light);
+    }
   }
 
-  // Elegant Glass Exhibition Vitrine with glowing rotating keepsake
   private createGlassDisplayVitrine(planX: number, planY: number, artifactType: 'heart' | 'star' | 'flower'): void {
     const z = -planY;
     const vitrineGroup = new THREE.Group();
@@ -654,17 +586,15 @@ export class PropsBuilder {
 
     // 1. Mahogany Pedestal Base
     const pedestal = new THREE.Mesh(
-      new THREE.BoxGeometry(0.72, 0.95, 0.72),
+      new THREE.BoxGeometry(0.68, 0.95, 0.68),
       this.materials.wainscotMaterial
     );
     pedestal.position.set(0, 0.475, 0);
-    pedestal.castShadow = true;
     pedestal.receiveShadow = true;
     vitrineGroup.add(pedestal);
 
-    // Gold trim band around pedestal
     const trim = new THREE.Mesh(
-      new THREE.BoxGeometry(0.76, 0.04, 0.76),
+      new THREE.BoxGeometry(0.72, 0.03, 0.72),
       this.materials.goldTrimMaterial
     );
     trim.position.set(0, 0.93, 0);
@@ -672,7 +602,7 @@ export class PropsBuilder {
 
     // 2. Velvet Cushion inside case
     const cushion = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55, 0.08, 0.55),
+      new THREE.BoxGeometry(0.52, 0.08, 0.52),
       this.materials.tuftedCushionMaterial
     );
     cushion.position.set(0, 0.99, 0);
@@ -684,55 +614,49 @@ export class PropsBuilder {
       roughness: 0.05,
       metalness: 0.1,
       transparent: true,
-      opacity: 0.32
+      opacity: 0.30
     });
     const glassCube = new THREE.Mesh(
-      new THREE.BoxGeometry(0.68, 0.72, 0.68),
+      new THREE.BoxGeometry(0.64, 0.70, 0.64),
       glassMat
     );
     glassCube.position.set(0, 1.39, 0);
     vitrineGroup.add(glassCube);
 
-    // 4. Rotating Cute Romantic Keepsake
+    // 4. Rotating Romantic Keepsake (self-luminous emissive)
     let artifact: THREE.Object3D;
     if (artifactType === 'heart') {
       const heartMat = new THREE.MeshStandardMaterial({
         color: 0xff6688,
         emissive: 0xff3366,
-        emissiveIntensity: 0.8,
+        emissiveIntensity: 0.9,
         metalness: 0.4,
         roughness: 0.2
       });
-      // Torus knot resembling an infinity heart
-      artifact = new THREE.Mesh(new THREE.TorusKnotGeometry(0.12, 0.04, 48, 8, 2, 3), heartMat);
+      artifact = new THREE.Mesh(new THREE.TorusKnotGeometry(0.12, 0.035, 32, 6, 2, 3), heartMat);
     } else if (artifactType === 'star') {
       const starMat = new THREE.MeshStandardMaterial({
         color: 0xffcc33,
         emissive: 0xff9900,
-        emissiveIntensity: 0.8,
+        emissiveIntensity: 0.9,
         metalness: 0.7,
         roughness: 0.2
       });
-      artifact = new THREE.Mesh(new THREE.OctahedronGeometry(0.15, 0), starMat);
+      artifact = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), starMat);
     } else {
       const flowerMat = new THREE.MeshStandardMaterial({
         color: 0xff88bb,
         emissive: 0xff5599,
-        emissiveIntensity: 0.8,
+        emissiveIntensity: 0.9,
         metalness: 0.3,
         roughness: 0.25
       });
-      artifact = new THREE.Mesh(new THREE.IcosahedronGeometry(0.14, 0), flowerMat);
+      artifact = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13, 0), flowerMat);
     }
 
     artifact.position.set(0, 1.26, 0);
     vitrineGroup.add(artifact);
     this.rotatingArtifacts.push(artifact);
-
-    // Mini interior spotlight illuminating the artifact from top of glass
-    const miniSpot = new THREE.PointLight(0xfffae0, 0.6, 2.5, 2);
-    miniSpot.position.set(0, 1.68, 0);
-    vitrineGroup.add(miniSpot);
 
     this.group.add(vitrineGroup);
   }
@@ -744,24 +668,20 @@ export class PropsBuilder {
     (this.exit1Door.material as THREE.MeshBasicMaterial).opacity = pulse1;
     (this.exit2Door.material as THREE.MeshBasicMaterial).opacity = pulse2;
 
-    // Warm breathing pulse on sconce and pendant accent lights
-    const warmPulse = 0.82 + Math.sin(time * 1.7) * 0.12;
+    // Warm breathing pulse on lights
+    const warmPulse = 0.85 + Math.sin(time * 1.5) * 0.10;
     for (const light of this.accentLights) {
-      light.intensity = warmPulse * (light.distance > 5 ? 0.48 : 0.38);
+      light.intensity = warmPulse * (light.distance > 7 ? 0.50 : 0.45);
     }
 
-    // Gentle rotation of the romantic vitrine keepsakes
+    // Gentle rotation of vitrine keepsakes
     for (let i = 0; i < this.rotatingArtifacts.length; i++) {
       const art = this.rotatingArtifacts[i];
-      art.rotation.y += 0.012 + i * 0.003;
-      art.rotation.x = Math.sin(time * 1.5 + i) * 0.15;
+      art.rotation.y += 0.012;
+      art.rotation.x = Math.sin(time * 1.5 + i) * 0.12;
     }
 
-    // Twinkling fairy lights sparkle
-    for (let i = 0; i < this.fairyLights.length; i++) {
-      const bulb = this.fairyLights[i];
-      const mat = bulb.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 1.2 + Math.sin(time * 3.5 + i * 1.3) * 0.5;
-    }
+    // Twinkling fairy lights (single material pulse)
+    this.fairyLightMat.emissiveIntensity = 1.3 + Math.sin(time * 3.0) * 0.4;
   }
 }
