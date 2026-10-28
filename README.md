@@ -1,4 +1,4 @@
-# Jenil & Rutu — Our Walkable 3D Museum
+# Jenil — Our Walkable 3D Museum
 
 A personal, fully-walkable 3D museum website built with Three.js, Vite, and TypeScript featuring customized stylized humanoid characters (Jenil & Rutu), interactive artwork and video displays, responsive camera navigation with collision avoidance, and dual narrative branching endings.
 
